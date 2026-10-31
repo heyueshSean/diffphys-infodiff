@@ -27,6 +27,58 @@
 
 ## 1. 建远端仓库并推送
 
+> ### ⚠ 网络实况（2026-10-31 实测，先读这段）
+>
+> 远端仓库 `heyueshSean/diffphys-infodiff` 已建好（public、空仓、默认分支 `main`），
+> 但**这台机器到 GitHub 的网络是受限的**：
+>
+> | 通道 | 结果 |
+> |---|---|
+> | `https://github.com` 经代理 | ❌ `CONNECT tunnel failed, response 502` |
+> | `https://github.com` 直连（去代理） | ❌ 20 秒超时 |
+> | **`git@github.com:22`（SSH）** | ✅ **TCP 开放，SSH 握手成功** |
+> | **`https://api.github.com`** | ✅ **200** |
+> | `codeload` / `raw` / `objects.githubusercontent.com` | ✅ 可达（只读） |
+>
+> 代理只对 `api.github.com` 等少数 host 放行。⇒ **`git push` 默认走的
+> `https://github.com` 是死路**，必须改用下面两种方式之一。
+
+### 方式 0（推荐）：SSH —— 已配好，只差把公钥加到 GitHub
+
+本地已就绪：`origin` 指向 `git@github.com:heyueshSean/diffphys-infodiff.git`，
+分支已改名 `main`，3 个 commit 待推。
+
+**你需要做一次**：把下面这把 ed25519 公钥加到
+https://github.com/settings/ssh/new （Title 随便填，Key type 保持 Authentication Key）：
+
+```
+ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIMGH7jQ182tPItOa0q+sXTR4wRinQU+QOs28FJk4sF34 heyueshSean@diffphys-infodiff
+```
+
+（私钥在本机 `~/.ssh/id_ed25519`，无 passphrase。）
+
+加完之后，我这边一条命令就推完：
+
+```bash
+cd "C:/Users/Yuesheng He/WorkBuddy/2026-08-07-15-31-42/diffphys-infodiff"
+git push -u origin main
+```
+
+### 方式 1：用 API 推送（需要有效的 Personal Access Token）
+
+`tools/publish_via_api.py` 走 `api.github.com`，用 Git Data API 手工构造
+blob → tree → commit → ref。字节**完全保真**（已用 `git hash-object` 验证：
+71/71 文件的 blob sha1 与 git 算的一致，CRLF 文件的 `\r` 一个不少）。
+
+```bash
+export GH_TOKEN=<你的 PAT>
+python tools/publish_via_api.py          # 先 --dry-run 看清单
+```
+
+⚠ 注意：8 位那种短口令不是 PAT。GitHub 的 classic PAT 是 **40 位十六进制**
+（或 `github_pat_` 开头的一长串）。在
+https://github.com/settings/tokens 生成，勾选 `repo`。
+
 ### 方式 A：用 GitHub CLI（需先装 gh 并 `gh auth login`）
 
 ```bash
