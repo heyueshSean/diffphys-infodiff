@@ -8,15 +8,23 @@
 # 这是 provenance 的硬要求 —— MANIFEST.md 里的 sha1 必须等于训练机上的 sha1；
 # 只要 Git 动过一个 \r，那条对应关系就断了。
 #
-# 只有文档类（md / json / txt / yml）才做 LF 归一化。
+# 只有文档类（docs/ 下的 md / yml）才做 LF 归一化。
+#
+# ★★ 顺序即语义 ★★
+# gitattributes 的规则是「同一文件匹配多行时，后出现的那行赢」，
+# 与路径写得有多具体无关。所以**目录级 `-text` 必须写在扩展名规则之后**，
+# 否则 `*.txt text eol=lf` 会把 results/rl/*.txt 归一化掉
+# —— 那正是本仓第一版踩到的坑（env_check.txt / verify_ppo_v21_out.txt 被改写）。
 
+# ---- 1. 默认：文档类做 LF 归一化（先写，后面对其收窄） ----
+*.md    text eol=lf
+*.json  text eol=lf
+*.txt   text eol=lf
+*.yml   text eol=lf
+
+# ---- 2. 例外：代码与证据目录一律原样（后写，覆盖上面的规则） ----
 rl/**                    -text
 nn/**                    -text
 results/**               -text
 tools/**                 -text
 MANIFEST.md              -text
-
-*.md    text eol=lf
-*.json  text eol=lf
-*.txt   text eol=lf
-*.yml   text eol=lf
