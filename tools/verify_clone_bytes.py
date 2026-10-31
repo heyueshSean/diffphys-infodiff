@@ -60,8 +60,11 @@ def sha1_of(path):
 
 def main():
     here = os.path.dirname(os.path.abspath(__file__))
+    repo = os.path.dirname(here)
+    # 克隆副本通常放在仓库**外面**（免得被当成仓库内容提交进去），
+    # 所以默认是 <工作目录>/_clone_verify/diffphys-infodiff，而不是仓库内。
     default_clone = os.path.join(
-        os.path.dirname(here), "_clone_verify", "diffphys-infodiff")
+        os.path.dirname(repo), "_clone_verify", "diffphys-infodiff")
 
     ap = argparse.ArgumentParser()
     ap.add_argument("--src", default=os.path.dirname(here))
