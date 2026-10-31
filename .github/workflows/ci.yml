@@ -1,0 +1,52 @@
+name: ci
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  compile-all:
+    name: py_compile every shipped script
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      # 只编译，不执行：这些脚本 import torch 且模块级就建模型，
+      # 在 CI 上真跑会直接触发整轮训练（见 docs/06-methodology.md §5）。
+      - name: compile
+        run: |
+          python - <<'EOF'
+          import pathlib, py_compile, sys, tempfile, os
+          bad = []
+          for p in sorted(pathlib.Path(".").rglob("*.py")):
+              if ".github" in p.parts:
+                  continue
+              try:
+                  py_compile.compile(
+                      str(p),
+                      cfile=os.path.join(tempfile.gettempdir(), "ci_%s.pyc" % p.name),
+                      doraise=True,
+                  )
+              except Exception as e:
+                  bad.append("%s: %s" % (p, e))
+          print("compiled %d files" % len(list(pathlib.Path(".").rglob("*.py"))))
+          for b in bad:
+              print("FAIL " + b)
+          sys.exit(1 if bad else 0)
+          EOF
+
+  manifest-fresh:
+    name: MANIFEST.md is up to date
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: regenerate and diff
+        run: |
+          python tools/make_manifest.py >/dev/null
+          git diff --exit-code -- MANIFEST.md

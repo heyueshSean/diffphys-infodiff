@@ -1,0 +1,1248 @@
+{
+ "version": "info_v02",
+ "base": "cnn10_v51.py",
+ "base_sha1": "3516a363737c1930019ba97f7c2853e67fc0eee2",
+ "base_note": "B-line history-best + backtrack baseline (97.56); archived 2026-09-29.",
+ "axis": "non-collapsible information map: the diffusivity is modulated by a spatially-CONTRAST-NORMALISED, weight-decay-immune learned map I = sigmoid(level + tanh(contrast_norm(conv1x1(u)))); D(x) = D0*exp(-beta*I(x)), explicit-Euler PDE.",
+ "axis_short": "contrast-normalised info map (v01 map had decayed to the constant 0.5)",
+ "axis_constants": {
+  "INFO_CONTRAST_REL_FLOOR": 0.01,
+  "INFO_MAP_LEVEL": 0.0,
+  "INFO_BETA": 2.0,
+  "INFO_D0_INIT": 1.0,
+  "INFO_D0_CLAMP": 1.5,
+  "INFO_N_STEPS": 4,
+  "INFO_DT": 0.2,
+  "info_conv_bias": false,
+  "wt_decay_on_info_conv": true
+ },
+ "why_this_axis": "v01 measured: info_adaptivity 0.0135 over d_mean~0.55 => d_rel ~2.4%; g2_cls0 vs full flipped only 8/2000 predictions while g2_off flipped 329/2000 => ~97.6% of the field effect was plain isotropic diffusion and the \"information-guided\" part was inert. Cause: conv1x1 sat in the weight-decayed group, so wd (5e-4 x 0.1 x 62k steps = e^-3.1) shrank its weights ~22x and the map converged to sigmoid(0)=0.5. Dividing by the per-sample rms makes the loss exactly scale-invariant in ||w||, so wd becomes a mathematical no-op on the map's spatial contrast: collapse is structurally impossible, not tuned away.",
+ "why_prev_axis_kept": "The InfoDiff premise itself was never tested in v01 (its defining feature was inert), and the redline was not crossed, so the method is repaired rather than replaced -- v58->v59 precedent: fix the delivery, do not kill the axis.",
+ "v01_diagnosis": {
+  "delivered": 97.06,
+  "base": 97.56,
+  "z": -2.9586,
+  "info_adaptivity_g2": 0.013493,
+  "d0_g2": 1.5,
+  "d0_clamped": true,
+  "g2_cls0_rel_shift": 0.004,
+  "g2_cls0_n_disagree": 8,
+  "g2_off_rel_shift": 0.1645,
+  "g2_off_n_disagree": 329,
+  "field_share_from_information_content": 0.0243161094224924,
+  "instrument_defects_fixed_here": [
+   "per-mode accuracy accumulator was dead code (...) if False else 0",
+   "ablation subset capped at 2000 (0.5pp resolution)",
+   "gain sweep was one-sided and saturated at the D0 clamp",
+   "disk_guard selftest could never pass and its probes were counted as real I/O",
+   "verdict band name contradicted its own z (NULL band, z=-2.96)"
+  ]
+ },
+ "seed": 1234,
+ "n_gpus": 2,
+ "batch_size": 256,
+ "epoch": 180,
+ "actual_epochs": 168,
+ "early_stopped": true,
+ "stop_reason": "TTA no improvement for 12 evaluations",
+ "test_accuracy": {
+  "final": 97.0,
+  "final_epoch": 168,
+  "best": 97.08,
+  "best_epoch": 131
+ },
+ "tta_accuracy": {
+  "final": 97.01,
+  "final_epoch": 168,
+  "best": 97.12,
+  "best_epoch": 132
+ },
+ "test_acc_at_best_tta_epoch": 96.9,
+ "all_members": {
+  "best_test": 97.08,
+  "best_tta": 97.12,
+  "final_test": 97.0,
+  "final_tta": 97.01,
+  "ens_test": 97.06,
+  "ens_tta": 97.06
+ },
+ "best_acc": 97.08,
+ "best_epoch": 131,
+ "best_tta_acc": 97.12,
+ "best_tta_epoch": 132,
+ "final_test": 97.0,
+ "final_tta": 97.01,
+ "ens_acc": 97.06,
+ "ens_tta": 97.06,
+ "delivered": 97.12,
+ "delivered_source": "best_tta",
+ "delivered_is_max_of_n": 3,
+ "delivered_n_members": [
+  "best_tta",
+  "final_tta",
+  "ens_tta"
+ ],
+ "delivered_all_max": 97.12,
+ "delivered_definition": "criterion uses max(best_tta, final_tta, ens_tta), identical to info_v01 so the redline/z stays comparable; delivered_all_max is the max over all 6 measured members",
+ "backtrack_redline": 97.04,
+ "backtrack_needed": false,
+ "backtrack_advice": "no backtrack",
+ "verdict": "REGRESS_ABOVE_REDLINE",
+ "verdict_text": "delivered 97.12: z=-2.60 <= -2 显著低于基线 97.56, 但 >= redline 97.04 => 不触发逐字回退; 先读 mechanism.verdict 再决定轴的去留",
+ "delivery_verdict": "REGRESS_ABOVE_REDLINE",
+ "mechanism_verdict": "INFOMAP_NO_LEVERAGE",
+ "mechanism_verdict_text": "图活了但杠杆 < 0.02 (含空间图案与样本间差异两种口径); 换掉信息图后 <2% 的测试预测翻转 => 算子仍被相邻 conv+BN 吸收 => 换轴",
+ "replicate": {
+  "base_file": "cnn10_v51.py",
+  "base_sha1": "3516a363737c1930019ba97f7c2853e67fc0eee2",
+  "base_acc": 97.56,
+  "sigma_diff": 0.169,
+  "delivered": 97.12,
+  "z_combined": -2.6036,
+  "z_band": "SIGNIFICANT_REGRESSION",
+  "verdict": "REGRESS"
+ },
+ "disk_guard": {
+  "enable": true,
+  "selftest": {
+   "ran": true,
+   "pass": true,
+   "expect_reject_big": true,
+   "expect_allow_small": true
+  },
+  "stats": {
+   "admit_total": 34,
+   "admit_ok": 34,
+   "admit_reject": 0,
+   "write_error": 0,
+   "read_fail": 0,
+   "recover_ok": 0
+  },
+  "events": [
+   {
+    "kind": "ckpt",
+    "need_mb": 345.9347915649414,
+    "free_mb": 27581.0390625,
+    "ok": true,
+    "reason": ""
+   },
+   {
+    "kind": "ckpt",
+    "need_mb": 345.9347915649414,
+    "free_mb": 27581.03125,
+    "ok": true,
+    "reason": ""
+   },
+   {
+    "kind": "ckpt",
+    "need_mb": 345.9347915649414,
+    "free_mb": 27490.98828125,
+    "ok": true,
+    "reason": ""
+   },
+   {
+    "kind": "ckpt",
+    "need_mb": 345.9347915649414,
+    "free_mb": 27490.98046875,
+    "ok": true,
+    "reason": ""
+   },
+   {
+    "kind": "ckpt",
+    "need_mb": 345.9347915649414,
+    "free_mb": 27490.9765625,
+    "ok": true,
+    "reason": ""
+   },
+   {
+    "kind": "ckpt",
+    "need_mb": 345.9347915649414,
+    "free_mb": 27490.98046875,
+    "ok": true,
+    "reason": ""
+   },
+   {
+    "kind": "ckpt",
+    "need_mb": 345.9347915649414,
+    "free_mb": 27490.98046875,
+    "ok": true,
+    "reason": ""
+   },
+   {
+    "kind": "ckpt",
+    "need_mb": 345.9347915649414,
+    "free_mb": 27490.9765625,
+    "ok": true,
+    "reason": ""
+   },
+   {
+    "kind": "ckpt",
+    "need_mb": 345.9347915649414,
+    "free_mb": 27490.9765625,
+    "ok": true,
+    "reason": ""
+   },
+   {
+    "kind": "ckpt",
+    "need_mb": 345.9347915649414,
+    "free_mb": 27490.96875,
+    "ok": true,
+    "reason": ""
+   },
+   {
+    "kind": "ckpt",
+    "need_mb": 345.9347915649414,
+    "free_mb": 27490.96875,
+    "ok": true,
+    "reason": ""
+   },
+   {
+    "kind": "ckpt",
+    "need_mb": 345.9347915649414,
+    "free_mb": 27490.92578125,
+    "ok": true,
+    "reason": ""
+   },
+   {
+    "kind": "ckpt",
+    "need_mb": 345.9347915649414,
+    "free_mb": 27490.921875,
+    "ok": true,
+    "reason": ""
+   },
+   {
+    "kind": "ckpt",
+    "need_mb": 345.9347915649414,
+    "free_mb": 27490.921875,
+    "ok": true,
+    "reason": ""
+   },
+   {
+    "kind": "ckpt",
+    "need_mb": 345.9347915649414,
+    "free_mb": 27490.91796875,
+    "ok": true,
+    "reason": ""
+   },
+   {
+    "kind": "ckpt",
+    "need_mb": 345.9347915649414,
+    "free_mb": 27686.40625,
+    "ok": true,
+    "reason": ""
+   },
+   {
+    "kind": "ckpt",
+    "need_mb": 345.9347915649414,
+    "free_mb": 27686.40625,
+    "ok": true,
+    "reason": ""
+   },
+   {
+    "kind": "ckpt",
+    "need_mb": 345.9347915649414,
+    "free_mb": 27686.40234375,
+    "ok": true,
+    "reason": ""
+   },
+   {
+    "kind": "selftest",
+    "need_mb": 5000.0,
+    "free_mb": 10.0,
+    "ok": false,
+    "reason": "insufficient_after_reserve"
+   },
+   {
+    "kind": "selftest",
+    "need_mb": 1.0,
+    "free_mb": 10.0,
+    "ok": true,
+    "reason": ""
+   }
+  ],
+  "min_free_seen_mb": 27490.91796875,
+  "verdict": "DISK_GUARD_CLEAN"
+ },
+ "field_ablation": {
+  "n_images": 10000,
+  "modes": {
+   "full": {
+    "rel_shift": 0.0,
+    "n_disagree": 0,
+    "acc": 97.01,
+    "dacc_pp": 0.0,
+    "dacc_se_pp": 0.0,
+    "dacc_readable": false
+   },
+   "g2_fixedpat": {
+    "rel_shift": 0.004,
+    "n_disagree": 40,
+    "acc": 96.98,
+    "dacc_pp": 0.03,
+    "dacc_se_pp": 0.0632,
+    "dacc_readable": false
+   },
+   "g2_cls0": {
+    "rel_shift": 0.0046,
+    "n_disagree": 46,
+    "acc": 96.98,
+    "dacc_pp": 0.03,
+    "dacc_se_pp": 0.0678,
+    "dacc_readable": false
+   },
+   "g2_clsmax": {
+    "rel_shift": 0.0349,
+    "n_disagree": 349,
+    "acc": 95.29,
+    "dacc_pp": 1.72,
+    "dacc_se_pp": 0.1868,
+    "dacc_readable": true
+   },
+   "g1_off": {
+    "rel_shift": 0.2337,
+    "n_disagree": 2337,
+    "acc": 76.07,
+    "dacc_pp": 20.94,
+    "dacc_se_pp": 0.4834,
+    "dacc_readable": true
+   },
+   "g2_off": {
+    "rel_shift": 0.1475,
+    "n_disagree": 1475,
+    "acc": 84.82,
+    "dacc_pp": 12.19,
+    "dacc_se_pp": 0.3841,
+    "dacc_readable": true
+   },
+   "g3_off": {
+    "rel_shift": 0.014,
+    "n_disagree": 140,
+    "acc": 96.52,
+    "dacc_pp": 0.49,
+    "dacc_se_pp": 0.1183,
+    "dacc_readable": true
+   }
+  },
+  "lever_pattern_vs_cls0": 0.0046,
+  "lever_sample_vs_fixedpat": 0.004,
+  "lever_space_vs_off": 0.1475,
+  "dir_pattern_pp": 0.03,
+  "dir_sample_pp": 0.03,
+  "full_acc": 97.01,
+  "wired": true,
+  "n_wired": 3,
+  "map_i_std": 0.138878,
+  "map_i_cross_std": 0.004775,
+  "v01_reference": {
+   "lever_pattern_vs_cls0": 0.004,
+   "n_images": 2000,
+   "n_disagree_g2_cls0": 8,
+   "lever_space_vs_off": 0.1645
+  },
+  "verdict": "INFOMAP_NO_LEVERAGE",
+  "verdict_text": "图活了但杠杆 < 0.02 (含空间图案与样本间差异两种口径); 换掉信息图后 <2% 的测试预测翻转 => 算子仍被相邻 conv+BN 吸收 => 换轴",
+  "verdict_bands": {
+   "INFOMAP_UNATTRIBUTABLE": "区块未全部接线 (info_conv 没进计算图) => 本版无此轴, 先修交付, 不判死轴",
+   "INFOMAP_NOT_DELIVERED": "图不可归因: 信息图仍近乎常数 (i_std 或 i_cross_std <= 1e-04). 对照 v01: i_std~0.012 (D 相对变化 2.4%), g2_cls0 vs full 只翻转 0.4%. => 归一化没救活它, 轴判死, 逐字回退 cnn10_v51.py",
+   "INFOMAP_NO_LEVERAGE": "图活了但杠杆 < 0.02 (含空间图案与样本间差异两种口径); 换掉信息图后 <2% 的测试预测翻转 => 算子仍被相邻 conv+BN 吸收 => 换轴",
+   "INFOMAP_LEVERAGE_NO_DIRECTION": "杠杆 >= 0.02 但方向 <= 0.50pp (paired SE 已报) => 换判据层级, 不加剂量",
+   "INFOMAP_AXIS_USED": "送到 ∧ 杠杆 >= 0.02 ∧ 方向 >= 0.50pp => 轴被真正用上; 只有此时 delivered 与基线 97.56 的 z 值才值得解读"
+  },
+  "verdict_tol": {
+   "lever": 0.02,
+   "dir_pp": 0.5,
+   "map_std": 0.0001
+  },
+  "verdict_selftest": {
+   "ran": true,
+   "n_cases": 13,
+   "n_pass": 13,
+   "all_pass": true,
+   "failures": []
+  }
+ },
+ "gate2_gain_sweep": {
+  "points": [
+   {
+    "scale_k": 0.0,
+    "rel_shift_vs_full": 0.1437,
+    "n_disagree": 1437
+   },
+   {
+    "scale_k": 0.1,
+    "rel_shift_vs_full": 0.0807,
+    "n_disagree": 807
+   },
+   {
+    "scale_k": 0.35,
+    "rel_shift_vs_full": 0.0312,
+    "n_disagree": 312
+   },
+   {
+    "scale_k": 0.5,
+    "rel_shift_vs_full": 0.0204,
+    "n_disagree": 204
+   },
+   {
+    "scale_k": 1.0,
+    "rel_shift_vs_full": 0.0,
+    "n_disagree": 0
+   }
+  ],
+  "amplitude_verdict": "AMPLITUDE_SWEEP_CLAMP_BOUND_ONE_SIDED",
+  "peak_scale_k": 0.0,
+  "d0_effective_max": 1.5,
+  "d0_clamp": 1.5,
+  "clamp_binding": true,
+  "swept_scales": [
+   0.0,
+   0.1,
+   0.35,
+   0.5,
+   1.0
+  ],
+  "one_sided": true,
+  "note": "v01 swept [0,0.5,1,2,3] and got exactly 0 disagreement for every k>=1 because D0 sat at the clamp; v02 drops the provably-identical upper points and keeps k<=1, and reports clamp_binding so a saturated sweep is never read as a flat response."
+ },
+ "field_diagnostics": {
+  "g1": {
+   "info_adaptivity": 0.145085,
+   "i_std": 0.148139,
+   "i_cross_std": 0.004896,
+   "d_mean": 0.510668,
+   "d_rel": 0.284107,
+   "alpha": 1.0004,
+   "d0": 1.305,
+   "clamp_bound": false
+  },
+  "g2": {
+   "info_adaptivity": 0.156714,
+   "i_std": 0.138878,
+   "i_cross_std": 0.004775,
+   "d_mean": 0.585281,
+   "d_rel": 0.267759,
+   "alpha": 1.0532,
+   "d0": 1.5,
+   "clamp_bound": true
+  },
+  "g3": {
+   "info_adaptivity": 0.165405,
+   "i_std": 0.145165,
+   "i_cross_std": 0.006897,
+   "d_mean": 0.573613,
+   "d_rel": 0.288356,
+   "alpha": 1.0574,
+   "d0": 1.5,
+   "clamp_bound": true
+  },
+  "summary": {
+   "g2_d_rel": 0.267759,
+   "v01_g2_d_rel_reference": 0.024,
+   "g2_contrast_gain_vs_v01": 11.157,
+   "g2_clamp_bound": true,
+   "predicted_d_rel_at_init": 0.293,
+   "predicted_i_std_at_init": 0.149,
+   "predicted_d_range_at_init": [
+    0.348,
+    0.876
+   ],
+   "note": "v01 g2: info_adaptivity 0.0135 over d_mean ~0.55 => d_rel ~0.024, i.e. a 2.4% spatial contrast, and g2_cls0 vs full flipped only 8/2000 predictions. v02 must move d_rel by orders of magnitude or the axis is dead (pre-registered: d_rel is a DOSE readout, NOT a decision signal). Predicted from the delivered normalisation on a random pre-activation: d_rel ~0.293 (~12x v01), i_std ~0.149, D in [0.348, 0.876] with dt*4*Dmax = 0.70 <= 2 (strictly safer for CFL than v01 at 1.20). Reading a d_rel near 0.024 again means the normalisation did not take."
+  }
+ },
+ "history_test": [
+  {
+   "epoch": 1,
+   "acc": 33.24
+  },
+  {
+   "epoch": 2,
+   "acc": 44.54
+  },
+  {
+   "epoch": 3,
+   "acc": 44.05
+  },
+  {
+   "epoch": 4,
+   "acc": 63.35
+  },
+  {
+   "epoch": 5,
+   "acc": 66.17
+  },
+  {
+   "epoch": 6,
+   "acc": 70.96
+  },
+  {
+   "epoch": 7,
+   "acc": 69.51
+  },
+  {
+   "epoch": 8,
+   "acc": 78.73
+  },
+  {
+   "epoch": 9,
+   "acc": 78.41
+  },
+  {
+   "epoch": 10,
+   "acc": 79.32
+  },
+  {
+   "epoch": 11,
+   "acc": 73.87
+  },
+  {
+   "epoch": 12,
+   "acc": 72.2
+  },
+  {
+   "epoch": 13,
+   "acc": 75.92
+  },
+  {
+   "epoch": 14,
+   "acc": 75.95
+  },
+  {
+   "epoch": 15,
+   "acc": 80.9
+  },
+  {
+   "epoch": 16,
+   "acc": 81.85
+  },
+  {
+   "epoch": 17,
+   "acc": 81.75
+  },
+  {
+   "epoch": 18,
+   "acc": 85.02
+  },
+  {
+   "epoch": 19,
+   "acc": 83.44
+  },
+  {
+   "epoch": 20,
+   "acc": 86.06
+  },
+  {
+   "epoch": 21,
+   "acc": 81.55
+  },
+  {
+   "epoch": 22,
+   "acc": 85.49
+  },
+  {
+   "epoch": 23,
+   "acc": 80.61
+  },
+  {
+   "epoch": 24,
+   "acc": 85.88
+  },
+  {
+   "epoch": 25,
+   "acc": 84.46
+  },
+  {
+   "epoch": 26,
+   "acc": 84.11
+  },
+  {
+   "epoch": 27,
+   "acc": 84.45
+  },
+  {
+   "epoch": 28,
+   "acc": 84.17
+  },
+  {
+   "epoch": 29,
+   "acc": 86.81
+  },
+  {
+   "epoch": 30,
+   "acc": 86.4
+  },
+  {
+   "epoch": 31,
+   "acc": 83.59
+  },
+  {
+   "epoch": 32,
+   "acc": 83.28
+  },
+  {
+   "epoch": 33,
+   "acc": 86.85
+  },
+  {
+   "epoch": 34,
+   "acc": 87.25
+  },
+  {
+   "epoch": 35,
+   "acc": 88.07
+  },
+  {
+   "epoch": 36,
+   "acc": 87.07
+  },
+  {
+   "epoch": 37,
+   "acc": 84.18
+  },
+  {
+   "epoch": 38,
+   "acc": 87.85
+  },
+  {
+   "epoch": 39,
+   "acc": 78.01
+  },
+  {
+   "epoch": 40,
+   "acc": 88.84
+  },
+  {
+   "epoch": 41,
+   "acc": 85.17
+  },
+  {
+   "epoch": 42,
+   "acc": 87.27
+  },
+  {
+   "epoch": 43,
+   "acc": 84.04
+  },
+  {
+   "epoch": 44,
+   "acc": 88.11
+  },
+  {
+   "epoch": 45,
+   "acc": 88.11
+  },
+  {
+   "epoch": 46,
+   "acc": 82.6
+  },
+  {
+   "epoch": 47,
+   "acc": 87.97
+  },
+  {
+   "epoch": 48,
+   "acc": 88.81
+  },
+  {
+   "epoch": 49,
+   "acc": 87.75
+  },
+  {
+   "epoch": 50,
+   "acc": 89.98
+  },
+  {
+   "epoch": 51,
+   "acc": 89.06
+  },
+  {
+   "epoch": 52,
+   "acc": 85.05
+  },
+  {
+   "epoch": 53,
+   "acc": 86.93
+  },
+  {
+   "epoch": 54,
+   "acc": 87.04
+  },
+  {
+   "epoch": 55,
+   "acc": 86.18
+  },
+  {
+   "epoch": 56,
+   "acc": 87.36
+  },
+  {
+   "epoch": 57,
+   "acc": 88.91
+  },
+  {
+   "epoch": 58,
+   "acc": 87.46
+  },
+  {
+   "epoch": 59,
+   "acc": 89.79
+  },
+  {
+   "epoch": 60,
+   "acc": 91.44
+  },
+  {
+   "epoch": 61,
+   "acc": 89.29
+  },
+  {
+   "epoch": 62,
+   "acc": 91.04
+  },
+  {
+   "epoch": 63,
+   "acc": 83.32
+  },
+  {
+   "epoch": 64,
+   "acc": 84.82
+  },
+  {
+   "epoch": 65,
+   "acc": 90.28
+  },
+  {
+   "epoch": 66,
+   "acc": 91.27
+  },
+  {
+   "epoch": 67,
+   "acc": 90.41
+  },
+  {
+   "epoch": 68,
+   "acc": 92.15
+  },
+  {
+   "epoch": 69,
+   "acc": 90.53
+  },
+  {
+   "epoch": 70,
+   "acc": 91.49
+  },
+  {
+   "epoch": 71,
+   "acc": 92.52
+  },
+  {
+   "epoch": 72,
+   "acc": 92.14
+  },
+  {
+   "epoch": 73,
+   "acc": 93.86
+  },
+  {
+   "epoch": 74,
+   "acc": 92.79
+  },
+  {
+   "epoch": 75,
+   "acc": 92.32
+  },
+  {
+   "epoch": 76,
+   "acc": 93.52
+  },
+  {
+   "epoch": 77,
+   "acc": 93.45
+  },
+  {
+   "epoch": 78,
+   "acc": 93.28
+  },
+  {
+   "epoch": 79,
+   "acc": 93.2
+  },
+  {
+   "epoch": 80,
+   "acc": 93.83
+  },
+  {
+   "epoch": 81,
+   "acc": 93.54
+  },
+  {
+   "epoch": 82,
+   "acc": 94.05
+  },
+  {
+   "epoch": 83,
+   "acc": 93.54
+  },
+  {
+   "epoch": 84,
+   "acc": 94.38
+  },
+  {
+   "epoch": 85,
+   "acc": 94.4
+  },
+  {
+   "epoch": 86,
+   "acc": 94.25
+  },
+  {
+   "epoch": 87,
+   "acc": 94.18
+  },
+  {
+   "epoch": 88,
+   "acc": 94.45
+  },
+  {
+   "epoch": 89,
+   "acc": 94.56
+  },
+  {
+   "epoch": 90,
+   "acc": 93.42
+  },
+  {
+   "epoch": 91,
+   "acc": 94.71
+  },
+  {
+   "epoch": 92,
+   "acc": 95.05
+  },
+  {
+   "epoch": 93,
+   "acc": 95.54
+  },
+  {
+   "epoch": 94,
+   "acc": 95.23
+  },
+  {
+   "epoch": 95,
+   "acc": 95.43
+  },
+  {
+   "epoch": 96,
+   "acc": 95.3
+  },
+  {
+   "epoch": 97,
+   "acc": 95.84
+  },
+  {
+   "epoch": 98,
+   "acc": 95.86
+  },
+  {
+   "epoch": 99,
+   "acc": 95.92
+  },
+  {
+   "epoch": 100,
+   "acc": 95.82
+  },
+  {
+   "epoch": 101,
+   "acc": 96.18
+  },
+  {
+   "epoch": 102,
+   "acc": 96.2
+  },
+  {
+   "epoch": 103,
+   "acc": 96.42
+  },
+  {
+   "epoch": 104,
+   "acc": 96.4
+  },
+  {
+   "epoch": 105,
+   "acc": 96.54
+  },
+  {
+   "epoch": 106,
+   "acc": 96.38
+  },
+  {
+   "epoch": 107,
+   "acc": 96.65
+  },
+  {
+   "epoch": 108,
+   "acc": 96.64
+  },
+  {
+   "epoch": 109,
+   "acc": 96.69
+  },
+  {
+   "epoch": 110,
+   "acc": 96.71
+  },
+  {
+   "epoch": 111,
+   "acc": 96.8
+  },
+  {
+   "epoch": 112,
+   "acc": 96.76
+  },
+  {
+   "epoch": 113,
+   "acc": 96.83
+  },
+  {
+   "epoch": 114,
+   "acc": 96.81
+  },
+  {
+   "epoch": 115,
+   "acc": 96.83
+  },
+  {
+   "epoch": 116,
+   "acc": 96.79
+  },
+  {
+   "epoch": 117,
+   "acc": 96.87
+  },
+  {
+   "epoch": 118,
+   "acc": 96.88
+  },
+  {
+   "epoch": 119,
+   "acc": 96.8
+  },
+  {
+   "epoch": 120,
+   "acc": 96.86
+  },
+  {
+   "epoch": 121,
+   "acc": 96.91
+  },
+  {
+   "epoch": 122,
+   "acc": 96.93
+  },
+  {
+   "epoch": 123,
+   "acc": 96.96
+  },
+  {
+   "epoch": 124,
+   "acc": 96.91
+  },
+  {
+   "epoch": 125,
+   "acc": 96.96
+  },
+  {
+   "epoch": 126,
+   "acc": 96.95
+  },
+  {
+   "epoch": 127,
+   "acc": 96.89
+  },
+  {
+   "epoch": 128,
+   "acc": 97.02
+  },
+  {
+   "epoch": 129,
+   "acc": 96.97
+  },
+  {
+   "epoch": 130,
+   "acc": 96.99
+  },
+  {
+   "epoch": 131,
+   "acc": 97.08
+  },
+  {
+   "epoch": 132,
+   "acc": 96.9
+  },
+  {
+   "epoch": 133,
+   "acc": 96.95
+  },
+  {
+   "epoch": 134,
+   "acc": 97.06
+  },
+  {
+   "epoch": 135,
+   "acc": 96.99
+  },
+  {
+   "epoch": 136,
+   "acc": 96.95
+  },
+  {
+   "epoch": 137,
+   "acc": 96.96
+  },
+  {
+   "epoch": 138,
+   "acc": 97.01
+  },
+  {
+   "epoch": 139,
+   "acc": 97.03
+  },
+  {
+   "epoch": 140,
+   "acc": 97.0
+  },
+  {
+   "epoch": 141,
+   "acc": 97.03
+  },
+  {
+   "epoch": 142,
+   "acc": 96.97
+  },
+  {
+   "epoch": 143,
+   "acc": 96.93
+  },
+  {
+   "epoch": 144,
+   "acc": 96.99
+  },
+  {
+   "epoch": 145,
+   "acc": 96.96
+  },
+  {
+   "epoch": 146,
+   "acc": 96.99
+  },
+  {
+   "epoch": 147,
+   "acc": 97.03
+  },
+  {
+   "epoch": 148,
+   "acc": 97.04
+  },
+  {
+   "epoch": 149,
+   "acc": 96.97
+  },
+  {
+   "epoch": 150,
+   "acc": 97.0
+  },
+  {
+   "epoch": 151,
+   "acc": 96.96
+  },
+  {
+   "epoch": 152,
+   "acc": 97.06
+  },
+  {
+   "epoch": 153,
+   "acc": 97.0
+  },
+  {
+   "epoch": 154,
+   "acc": 96.94
+  },
+  {
+   "epoch": 155,
+   "acc": 96.93
+  },
+  {
+   "epoch": 156,
+   "acc": 97.01
+  },
+  {
+   "epoch": 157,
+   "acc": 96.93
+  },
+  {
+   "epoch": 158,
+   "acc": 96.96
+  },
+  {
+   "epoch": 159,
+   "acc": 96.99
+  },
+  {
+   "epoch": 160,
+   "acc": 96.96
+  },
+  {
+   "epoch": 161,
+   "acc": 97.01
+  },
+  {
+   "epoch": 162,
+   "acc": 96.9
+  },
+  {
+   "epoch": 163,
+   "acc": 97.03
+  },
+  {
+   "epoch": 164,
+   "acc": 97.01
+  },
+  {
+   "epoch": 165,
+   "acc": 97.03
+  },
+  {
+   "epoch": 166,
+   "acc": 96.98
+  },
+  {
+   "epoch": 167,
+   "acc": 96.98
+  },
+  {
+   "epoch": 168,
+   "acc": 97.0
+  }
+ ],
+ "history_tta": [
+  {
+   "epoch": 81,
+   "acc": 94.13
+  },
+  {
+   "epoch": 84,
+   "acc": 94.93
+  },
+  {
+   "epoch": 87,
+   "acc": 94.8
+  },
+  {
+   "epoch": 90,
+   "acc": 94.14
+  },
+  {
+   "epoch": 93,
+   "acc": 95.99
+  },
+  {
+   "epoch": 96,
+   "acc": 95.68
+  },
+  {
+   "epoch": 99,
+   "acc": 95.99
+  },
+  {
+   "epoch": 102,
+   "acc": 96.54
+  },
+  {
+   "epoch": 105,
+   "acc": 96.81
+  },
+  {
+   "epoch": 108,
+   "acc": 96.84
+  },
+  {
+   "epoch": 111,
+   "acc": 96.94
+  },
+  {
+   "epoch": 114,
+   "acc": 97.05
+  },
+  {
+   "epoch": 117,
+   "acc": 96.98
+  },
+  {
+   "epoch": 120,
+   "acc": 97.03
+  },
+  {
+   "epoch": 123,
+   "acc": 97.06
+  },
+  {
+   "epoch": 126,
+   "acc": 97.1
+  },
+  {
+   "epoch": 129,
+   "acc": 97.07
+  },
+  {
+   "epoch": 132,
+   "acc": 97.12
+  },
+  {
+   "epoch": 135,
+   "acc": 97.03
+  },
+  {
+   "epoch": 138,
+   "acc": 97.01
+  },
+  {
+   "epoch": 141,
+   "acc": 97.09
+  },
+  {
+   "epoch": 144,
+   "acc": 97.02
+  },
+  {
+   "epoch": 147,
+   "acc": 97.07
+  },
+  {
+   "epoch": 150,
+   "acc": 97.06
+  },
+  {
+   "epoch": 153,
+   "acc": 97.04
+  },
+  {
+   "epoch": 156,
+   "acc": 97.01
+  },
+  {
+   "epoch": 159,
+   "acc": 97.02
+  },
+  {
+   "epoch": 162,
+   "acc": 97.11
+  },
+  {
+   "epoch": 165,
+   "acc": 97.08
+  },
+  {
+   "epoch": 168,
+   "acc": 97.01
+  }
+ ]
+}

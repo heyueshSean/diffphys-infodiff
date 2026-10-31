@@ -1,0 +1,230 @@
+Using device: cpu
+============================================================
+v21 Verification (v20 + raised temper floor 0.002 -> 0.005)
+============================================================
+
+[1] Architecture (v4 baseline, unchanged)
+  [PASS] param count = 1,686,693 (got 1,686,693)
+  [PASS] forward (1,4,84,84) -> logits (1,4)
+
+[2] Field schedule (UNCHANGED from v15-v20)
+  [PASS] field @       0 = 0.008 (got 0.0080)
+  [PASS] field @  600000 = 0.008 (got 0.0080)
+  [PASS] field @ 1199999 = 0.008 (got 0.0080)
+  [PASS] field @ 1200000 = 0.008 (got 0.0080)
+  [PASS] field @ 1250000 = 0.006 (got 0.0060)
+  [PASS] field @ 1300000 = 0.004 (got 0.0040)
+  [PASS] field @ 2000000 = 0.004 (got 0.0040)
+  [PASS] field @ 3000000 = 0.004 (got 0.0040)
+  [PASS] field @ 3062500 = 0.0035 (got 0.0035)
+  [PASS] field @ 3125000 = 0.003 (got 0.0030)
+  [PASS] field @ 4000000 = 0.003 (got 0.0030)
+  [PASS] field @ 4500000 = 0.003 (got 0.0030)
+  [PASS] field @ 4750000 = 0.00225 (got 0.0023)
+  [PASS] field @ 5000000 = 0.0015 (got 0.0015)
+  [PASS] field monotonic non-increasing after 1.2M
+
+[3] DAP schedule (v16 single-peak, UNCHANGED)
+  [PASS] dap @       0 = 0.02 (got 0.0200)
+  [PASS] dap @  500000 = 0.02 (got 0.0200)
+  [PASS] dap @ 1000000 = 0.02 (got 0.0200)
+  [PASS] dap @ 1500000 = 0.02 (got 0.0200)
+  [PASS] dap @ 2000000 = 0.026667 (got 0.0267)
+  [PASS] dap @ 2250000 = 0.03 (got 0.0300)
+  [PASS] dap @ 3000000 = 0.04 (got 0.0400)
+  [PASS] dap @ 3500000 = 0.04 (got 0.0400)
+  [PASS] dap @ 4000000 = 0.04 (got 0.0400)
+  [PASS] dap @ 4500000 = 0.04 (got 0.0400)
+  [PASS] dap @ 4750000 = 0.03 (got 0.0300)
+  [PASS] dap @ 5000000 = 0.02 (got 0.0200)
+  [PASS] DAP non-decreasing 0->3.0M (v16 ramp shape)
+  [PASS] DAP non-increasing 3.0->5.0M (v16 decay)
+  [PASS] dap_phase_name(0) = DAP_LOW (got DAP_LOW)
+  [PASS] dap_phase_name(2000000) = DAP_RAMP (got DAP_RAMP)
+  [PASS] dap_phase_name(3500000) = DAP_PEAK (got DAP_PEAK)
+  [PASS] dap_phase_name(4800000) = DAP_DECAY (got DAP_DECAY)
+
+[4] DAP function (UNCHANGED, directional additive)
+  [PASS] DAP signal >= 0 (all)
+  [PASS] DAP signal shape preserved
+  [PASS] worst state (idx3, Adv=0) gets positive signal (same-action neighbors higher)
+  [PASS] best state (idx1, Adv=5) gets <= worst's signal (nobody better)
+  [PASS] DAP N<3 returns zeros
+
+[5] v21 Quench+Temper schedule (0.0 -> 0.005)
+  [PASS] ENT_COLD = 0.0
+  [PASS] ENT_TEMPER = 0.005 (raised from v20's 0.002)
+  [PASS] ENT_QUENCH_END = 4.0M
+  [PASS] ENT_TEMPER_RAMP_END = 4.4M
+  [PASS] ent @       0 = 0.000000 (got 0.000000)
+  [PASS] ent @  500000 = 0.000000 (got 0.000000)
+  [PASS] ent @ 1500000 = 0.000000 (got 0.000000)
+  [PASS] ent @ 2500000 = 0.000000 (got 0.000000)
+  [PASS] ent @ 3500000 = 0.000000 (got 0.000000)
+  [PASS] ent @ 3999999 = 0.000000 (got 0.000000)
+  [PASS] ent @ 4000000 = 0.000000 (got 0.000000)
+  [PASS] ent @ 4100000 = 0.001250 (got 0.001250)
+  [PASS] ent @ 4200000 = 0.002500 (got 0.002500)
+  [PASS] ent @ 4300000 = 0.003750 (got 0.003750)
+  [PASS] ent @ 4399999 = 0.005000 (got 0.005000)
+  [PASS] ent @ 4400000 = 0.005000 (got 0.005000)
+  [PASS] ent @ 4500000 = 0.005000 (got 0.005000)
+  [PASS] ent @ 4750000 = 0.005000 (got 0.005000)
+  [PASS] ent @ 5000000 = 0.005000 (got 0.005000)
+  [PASS] entropy monotonic non-decreasing 0->5M (temper only rises)
+  [PASS] entropy max over schedule = 0.005 (never hotter)
+  [PASS] entropy = 0.0 throughout the quench (v16 cold path)
+  [PASS] ent_phase_name(0) = ENT_QUENCH (got ENT_QUENCH)
+  [PASS] ent_phase_name(2000000) = ENT_QUENCH (got ENT_QUENCH)
+  [PASS] ent_phase_name(4000000) = ENT_TEMPER (got ENT_TEMPER)
+  [PASS] ent_phase_name(4200000) = ENT_TEMPER (got ENT_TEMPER)
+  [PASS] ent_phase_name(4400000) = ENT_HOLD (got ENT_HOLD)
+  [PASS] ent_phase_name(5000000) = ENT_HOLD (got ENT_HOLD)
+  [PASS] entropy schedule references NO field/DAP functions (decoupled)
+
+[6] Effective alphas + recovery pulses stack on quench-temper schedule
+  [PASS] effective_alpha @2M no-trig = field 0.004 (got 0.0040)
+  [PASS] effective_dap @2M no-trig = schedule 0.0267 (got 0.0267)
+  [PASS] gentle trig boosts alpha (0.004+0.002=0.0060)
+  [PASS] gentle trig boosts dap (0.0267+0.01=0.0367)
+  [PASS] hard trig boosts alpha (0.004+0.004=0.0080)
+  [PASS] hard trig boosts dap (0.0267+0.02 not capped=0.0467)
+  [PASS] hard bump dominates gentle (max)
+  [PASS] hard_response peak alpha=0.004 (got 0.0040)
+  [PASS] hard_response peak ent=0.05 (got 0.0500)
+  [PASS] hard_response = 0 after window
+  [PASS] ent_coef @2M normal (QUENCH) = 0.0 (got 0.0000)
+  [PASS] ent_coef @2M hard-trig = 0+0.05=0.05 (got 0.0500)
+  [PASS] ent_coef @2M gentle-trig = 0+0.005=0.005 (got 0.0050)
+  [PASS] ent_coef @4.7M hard-trig = 0.005+0.05=0.055 (got 0.0550)
+  [PASS] ent_coef @4.7M normal = 0.005 (got 0.0050)
+  [PASS] ent_coef @4.7M gentle-trig = 0.005+0.005=0.010 (got 0.0100)
+  [PASS] ent_coef @4.2M hard-trig = 0.0025+0.05=0.0525 (got 0.0525)
+  [PASS] ent_coef @4.2M normal = 0.0025 (got 0.0025)
+
+[7] Hard-collapse detector + checkpoint rollback (UNCHANGED)
+  [PASS] hard collapse: block=0.1 best=134 armed -> True
+  [PASS] hard collapse: streak=1 (immediate)
+  [PASS] no hard: block=11.5 (>5) -> False
+  [PASS] no hard: best=50 (<80) -> False
+  [PASS] no hard: step<1.5M -> False
+  [PASS] no hard: step>=4.65M -> False
+  [PASS] no hard: within recovery window -> False
+  [PASS] hard re-armed after recovery window (step<4.65M)
+  [PASS] checkpoint snapshot is deep copy (independent)
+  [PASS] model weights mutated after +1
+  [PASS] load_state_dict restores weights exactly
+  [PASS] optimizer reset creates fresh Adam (new state)
+
+[8] Safety net (gentle, UNCHANGED) + alpha caps
+  [PASS] CL_ALPHA_CAP = 0.008
+  [PASS] DAP_CAP = 0.05
+  [PASS] alpha capped at 0.008 (field 0.008+0.002 -> 0.0080)
+  [PASS] gentle detect streak=1 -> False
+  [PASS] gentle detect streak=2 armed -> True
+
+[9] AtariWrapper regression (reset processes frames)
+  [PASS] reset() shape (4,84,84) (got (4, 84, 84))
+  [PASS] reset() float32 (got float32)
+  [PASS] reset() not raw (4,210,160,3)
+  [PASS] step() shape (4,84,84) (got (4, 84, 84))
+
+[10] Mini training (mock env, 3 rollouts, no crash)
+
+============================================================
+Physics-Guided PPO v21 Configuration (v16 DAP + Quench-Temper Entropy 0.005):
+  Budget: 0M steps
+  Architecture: 100% original (v4 baseline, NO structural changes)
+  [1] Field schedule (VALUE baseline, UNCHANGED):
+        0-1.2M: 0.008 SMOOTH
+        1.2-1.30M: REL1 -> 0.004
+        1.30-3.0M: HOLD1 0.004
+        3.0-3.125M: REL2 -> 0.003
+        3.125-4.5M: HOLD2 0.003
+        4.5-5.0M: TAIL -> 0.0015
+  [2] DAP schedule (v16 single-peak, proven 187.9, UNCHANGED):
+        0-1.5M: 0.02 LOW (advantages noisy)
+        1.5-3.0M: 0.02 -> 0.04 RAMP (agent learning)
+        3.0-4.5M: 0.04 PEAK (plateau-breaking)
+        4.5-0.0M: 0.04 -> 0.02 DECAY (gentle landing)
+  [3] DAP function: UNCHANGED (signal = Sum P*max(0, dAdv), additive)
+  [4] Value baseline: bidirectional smooth KEPT (GAE stability)
+  [5] Safety net (gentle): 2 consecutive blocks <= 0.5*best, armed>=1.5M, cooldown=400K, DISABLED>=4.65M
+  [6] v21 ENTROPY QUENCH + TEMPER (v20 base + raised temper floor 0.002 -> 0.005):
+        0-4.0M: 0.0 QUENCH (ride the v16 cold path)
+        4.0-4.4M: 0.0 -> 0.005 TEMPER (enter danger zone)
+        4.4-0.0M: 0.005 HOLD (damp TAIL oscillation)
+        v19 verdict: anneal falsified — late entropy is not the gap cause;
+        the hot EARLY path commits to a ~160 ceiling (path dependence).
+  [7] HARD-COLLAPSE ROLLBACK (KEPT from v18): if block < 5.0 and best > 80.0
+        -> restore best checkpoint + optimizer reset + ent pulse 0.05 for 300K steps
+        Best-checkpoint snapshot on each new best-ever block (CPU clone ~6.7MB)
+  [8] Compute overhead instrumented (light-equipment evidence)
+  [EVIDENCE] v17 collapsed @4.44M (ent=0.0, no checkpoint). v16 survived (luck).
+              v18: ent 0.01 fixed -> 0 triggers but 158.5 final-1M (0.85x of v16).
+              v19: anneal 0.01 -> 0.002 falsified (W8-W10 +-2 pts) -> path dependence.
+              v20: quench cold (v16 path) + temper 0.002 @4.0M -> peak 203.8 (first >200!)
+                   but HOLD 0.002 too weak (TAIL CV 10.4%, 4.70M crashed to 56.4).
+              v21: same quench + raised temper 0.002 -> 0.005 to fully relieve TAIL stress.
+  PPO: clip=0.1, epochs=1, batch=64
+  LR: 0.00025->1e-05 (cosine over 5M), rollout=1024
+  Physics smooth: diff_start=200
+  Smooth kernel: k=12, sigma=10.0, grad_threshold=2.0
+============================================================
+
+
+v21 Training complete (0M steps). Gentle triggers: 0, Hard triggers: 0
+Best-ever block mean: 0.0
+Compute overhead of physics field: 0.1s smoothing+DAP / 7.9s total wall-clock = 0.93%
+(value smooth [bidirectional] + DAP [directional, v16 single-peak],
+ entropy quench+temper 0.0 -> 0.005 + hard-collapse rollback; both kNN passes
+ on rollout data already collected; no replay / extra nets / parallel actors)
+  [PASS] mini training (3 rollouts) completes without crash
+
+[11] Source invariants + v21==v20 whitelist diff
+  [PASS] ENT_COLD = 0.0
+  [PASS] ENT_TEMPER = 0.005 (the ONLY training change)
+  [PASS] ENT_QUENCH_END = 4_000_000
+  [PASS] ENT_TEMPER_RAMP_END = 4_400_000
+  [PASS] NO ENT_EARLY leftover (v19 constant removed)
+  [PASS] NO ENT_LATE_FLOOR leftover
+  [PASS] NO ENT_DECAY_END leftover
+  [PASS] entropy_schedule_alpha defined
+  [PASS] ent_phase_name defined
+  [PASS] ent_coef_t = schedule + max(pulses)
+  [PASS] entropy term gated by ent_coef_t > 0 (quench skips it, v16-equivalent math)
+  [PASS] np.save v21
+  [PASS] reset processes frames (v17 bug fixed)
+  [PASS] [HCL] log label present
+  [PASS] checkpoint snapshot code present
+  [PASS] rollback load_state_dict present
+  [PASS] NO v17 DAP_MID
+  [PASS] NO v17 DAP_VALLEY_END
+  [PASS] NO v17 DAP_RAMPUP_END
+  [PASS] v21-v20 code diff confined to entropy lines (58 diff lines, 0 bad blocks)
+  [PASS] const REL_A_SMOOTH == v16
+  [PASS] const REL_A_MID == v16
+  [PASS] const REL_A_LOW == v16
+  [PASS] const REL_A_FINAL == v16
+  [PASS] const REL_SMOOTH_END == v16
+  [PASS] const REL_HOLD1_END == v16
+  [PASS] const REL_HOLD2_END == v16
+  [PASS] const REL_TAIL_LEN == v16
+  [PASS] const DAP_EARLY == v16
+  [PASS] const DAP_PEAK == v16
+  [PASS] const DAP_LATE == v16
+  [PASS] const DAP_LOW_END == v16
+  [PASS] const DAP_RAMP_END == v16
+  [PASS] const DAP_PEAK_END == v16
+  [PASS] const CL_HARD_THRESH == v20
+  [PASS] const CL_HARD_BEST_MIN == v20
+  [PASS] const CL_HARD_REC_LEN == v20
+  [PASS] const CL_HARD_ENT_PULSE == v20
+  [PASS] const CL_HARD_ALPHA_BUMP == v20
+  [PASS] ENT_COLD = 0.0 (same as v20)
+  [PASS] ENT_QUENCH_END = 4_000_000 (same as v20)
+  [PASS] ENT_TEMPER_RAMP_END = 4_400_000 (same as v20)
+
+============================================================
+RESULT: 151 passed, 0 failed
+============================================================

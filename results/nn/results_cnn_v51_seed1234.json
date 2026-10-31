@@ -1,0 +1,1474 @@
+{
+  "version": "v51",
+  "base": "cnn10_v47.py",
+  "base_sha1": "a719d7dd235848af8033ff18876e3ece6da050fe",
+  "axis": "v51 axis = gate1 fixed injection coefficient 0.6 -> 0.9 (raise the layer1 physics-field injection to the design-domain upper bound used by the learnable gates, soft_bound(a,0.05,0.9)). gate1 is the only HARDCODED injection constant in the physics chain and was never tuned; gate2/gate3 are learnable so their init/bounds get compensated by the optimizer. pinn=0.04 from v50 and the v49 operator-level determinism hardening are preserved.",
+  "seed": 1234,
+  "batch_size": 256,
+  "n_gpus": 2,
+  "epoch": 180,
+  "actual_epochs": 172,
+  "early_stopped": true,
+  "best_acc": 97.32,
+  "best_epoch": 138,
+  "best_tta_acc": 97.56,
+  "best_tta_epoch": 135,
+  "final_tta": 97.54,
+  "ens_acc": 97.3,
+  "ens_tta": 97.51,
+  "delivered": 97.56,
+  "delivered_source": "final_tta_legacy_max_of_n(v49 交付链零后处理，口径与 v45/v47/v48 同尺)",
+  "delivered_is_max_of_n": true,
+  "backtrack_redline": 97.27,
+  "backtrack_needed": false,
+  "delivery_backtrack_advice": "DO_NOT_BACKTRACK",
+  "delivery_backtrack_scope": "本字段属于【交付判据】块：delivered <= 97.27 时回退到 cnn10_v46.py（逐字）。与复跑判据块的 backtrack_advice(DO_NOT_BACKTRACK_CODE) 作用域不同。",
+  "verdict": "NULL",
+  "lr_floor": {
+    "axis": "RETIRED in v48: late-phase lr clamp. Kept only as a machine-checkable retirement record.",
+    "enable": false,
+    "floor_ratio_of_lr_base": 0.0002,
+    "floor_abs_lr": 2e-05,
+    "from_epoch": 120,
+    "first_bite_epoch": -1,
+    "n_bites_in_this_run": 0,
+    "n_bites_train_window": 0,
+    "n_bites_full_horizon": 0,
+    "bites_epochs_in_this_run": [],
+    "clamp_retired_clean": true,
+    "checks": {
+      "floor_enabled": false,
+      "floor_ratio": 0.0002,
+      "floor_abs_lr": 2e-05,
+      "from_epoch": 120,
+      "expected_first_bite": -1,
+      "first_bite_epoch": -1,
+      "first_bite_matches_expected": true,
+      "n_bites_full_horizon": 0,
+      "n_bites_in_this_run": 0,
+      "bites_epochs_in_this_run": [],
+      "unchanged_before_from_epoch": true,
+      "floor_inside_phase2_range": true,
+      "lr_never_lowered": true,
+      "from_epoch_is_phase_boundary": true,
+      "n_bites_train_window_is_expected": true,
+      "n_bites_full_horizon_is_expected": true,
+      "clamp_retired_clean": true,
+      "delivery_is_unprocessed": true,
+      "verdict_advice_consistent": true,
+      "verdict_is_known": true
+    },
+    "instrument": "INSTRUMENT_OK",
+    "why_retired": "v47 实测：clamp 首个咬住点 ep168，而交付权重存在 ep138 ⇒ 剂量窗口与交付窗口不相交，delivered 在数学上不含本轴信息（NULL 不可归因）。且要把 clamp 提前到 ep138 之前，floor 须 >= 8.1e-5（phase2 峰值 1.0e-4 的 81%）⇒ 等于删掉 phase2 余弦波形 = 覆辙 148。⇒ 换参数化：改余弦自己的终点。",
+    "paired_scope": "retired; NOT part of any v48 criterion"
+  },
+  "determinism": {
+    "axis": "operator-level determinism hardening (cuBLAS workspace + deterministic algorithms)",
+    "probe_batch": 16,
+    "probe_seed": 2026092,
+    "cublas_workspace_config": ":4096:8",
+    "cudnn_deterministic": true,
+    "cudnn_benchmark": false,
+    "error": null,
+    "fallback_applied": false,
+    "nondeterministic_mode": {
+      "loss_1": 2.44990063,
+      "loss_2": 2.44990063,
+      "loss_abs_diff": 0.0,
+      "loss_bitwise_identical": true,
+      "logits_bitwise_identical": true,
+      "n_params_compared": 188,
+      "n_params_with_grad_diff": 143,
+      "grads_bitwise_identical": false,
+      "max_abs_grad_diff": 1.5139579772949219e-05,
+      "bitwise_identical_overall": false
+    },
+    "deterministic_mode": {
+      "loss_1": 2.44990063,
+      "loss_2": 2.44990063,
+      "loss_abs_diff": 0.0,
+      "loss_bitwise_identical": true,
+      "logits_bitwise_identical": true,
+      "n_params_compared": 188,
+      "n_params_with_grad_diff": 0,
+      "grads_bitwise_identical": true,
+      "max_abs_grad_diff": 0.0,
+      "bitwise_identical_overall": true
+    },
+    "final_use_deterministic_algorithms": true,
+    "axis_effective": true,
+    "elapsed_s": 0.67,
+    "verdict": "DETERMINISM_ACHIEVED",
+    "axis_verdict": "DETERMINISM_ACHIEVED"
+  },
+  "gate1_inject": {
+    "axis": "gate1 fixed injection coefficient 0.6 -> 0.9 (layer1 physics-field injection)",
+    "weight_old": 0.6,
+    "weight_new": 0.9,
+    "axis_effective": true,
+    "design_domain": [
+      0.05,
+      0.9
+    ],
+    "design_domain_source": "Gate(learnable=True) 的 alpha 经 soft_bound 界定在 [0.05, 0.9]；0.9 即该设计域上界，0.6 是低于上界的硬编码常量。",
+    "which_gate": "gate1 (layer1, FixedDiffusion 256ch, learnable=False)",
+    "why_gate1_not_gate23": "gate2/gate3 是 learnable ⇒ 改它们的 init/界会被优化器补偿掉；gate1 是固定常量 ⇒ 改它才有持续效应。",
+    "dose_from_epoch": 0,
+    "dose_reaches_delivery": true,
+    "why_this_axis": "物理场进主干的唯一通道是 Gate 的加性注入；gate1 是整条物理链路上唯一的硬编码字面量（自 v9 起从未被单独调过）。把它提到设计域上界，检验『layer1 固定注入是否被设低了』。与 v50 的 pinn 不同族（注入强度 ≠ 平滑惩罚剂量），故不构成『同族第三个补丁』。",
+    "paired_scope": "none: changing an injection strength changes the whole trajectory ⇒ no in-run control. Cross-run criterion only; single-run NULL must NOT be read as 'axis dead' (needs 3 seed)."
+  },
+  "pinn": {
+    "axis": "pinn (deep-feature spatial smoothness) regularization weight 0.08 -> 0.04 (halved)",
+    "weight_old": 0.08,
+    "weight_new": 0.04,
+    "axis_effective": true,
+    "dose_from_epoch": 0,
+    "dose_reaches_delivery": true,
+    "scope": "v50 axis record; NOT part of any v51 criterion (v50 实跑 NULL，本版原样保留该系数)",
+    "why_this_axis": "pinn = mean(dx^2)+mean(dy^2) of layer4 output (deep) penalizes BACKBONE feature gradients directly, which conflicts with the v36 principle 'physics must be a passive prior; regularization only acts on field params, never on backbone features'. Halving it (0.08->0.04) weakens that backbone penalty while keeping a mild smoothness floor. This is a recipe-domain change (changes optimizer reachable set), not a param-level clamp.",
+    "paired_scope": "none: changing a loss weight changes the whole trajectory ⇒ no in-run control. Cross-run criterion only; single-run NULL must NOT be read as 'axis dead' (needs 3 seed)."
+  },
+  "noise_floor": {
+    "sigma_diff_pp": 0.108,
+    "sigma_source": "v48 实跑 97.4625（末 8 次 TTA 均值）；σ_diff 来源 = v45/v46 一对零改动跑（train()/test_tta() 逐字相同、同 seed 1234、仅权重文件名常量不同）⇒ Δ = −0.108pp。★ 该 σ 是**实测**，不是 n=3 估计。",
+    "pass_margin_pp": 0.2175,
+    "old_v47_v48_margin_pp": 0.1,
+    "old_margin_in_sigma": 0.926,
+    "margin_at_least_2sigma": true,
+    "lines_derived_from_baseline": true,
+    "sigma_measured_constant": 0.108,
+    "note": "★ v47/v48 的 PASS 边距 0.10pp 只有 0.93σ ⇒ 那两个 NULL 是算术上被预先决定的，不构成『轴无效』的证据。以后 B 线 PASS 边距不得小于 2σ_diff。"
+  },
+  "text_sync": {
+    "axis_field_mentions_version": true,
+    "axis_field_mentions_real_axis": true,
+    "axis_field_is_shared_constant": true,
+    "axis_field_actually_equals_constant": true,
+    "version_is_v51": true,
+    "banner_phase2_end_derived": true,
+    "note": "axis 文案由常量 AXIS_V51 提供、banner 里的 phase2 终点与版本号从常量派生 ⇒ 『打印出来的配置』结构上不可能与真实配置脱钩（覆辙 113/119）。"
+  },
+  "lr_tail": {
+    "axis": "phase2 cosine endpoint 1e-5 -> 3.0e-5 (training-side, NOT a clamp)",
+    "enable": true,
+    "phase2_lr_end": 3e-05,
+    "phase2_lr_end_ref_frozen": 1e-05,
+    "first_change_epoch": 121,
+    "n_changed_in_this_run": 51,
+    "epochs_changed_in_this_run": [
+      121,
+      122,
+      123,
+      124,
+      125,
+      126,
+      127,
+      128,
+      129,
+      130,
+      131,
+      132,
+      133,
+      134,
+      135,
+      136,
+      137,
+      138,
+      139,
+      140,
+      141,
+      142,
+      143,
+      144,
+      145,
+      146,
+      147,
+      148,
+      149,
+      150,
+      151,
+      152,
+      153,
+      154,
+      155,
+      156,
+      157,
+      158,
+      159,
+      160,
+      161,
+      162,
+      163,
+      164,
+      165,
+      166,
+      167,
+      168,
+      169,
+      170,
+      171
+    ],
+    "best_tta_epoch": 135,
+    "dose_reaches_delivery": true,
+    "lr_mult_at_best_tta": 1.0337,
+    "dose_delivered": true,
+    "plateau_mean": 97.4963,
+    "plateau_sd": 0.016,
+    "plateau_n": 8,
+    "plateau_window_epochs": [
+      150,
+      171
+    ],
+    "selection_bias_pp": 0.0637,
+    "plateau_verdict": "NULL",
+    "checks": {
+      "axis": "phase2 cosine endpoint 1e-5 -> 3.0e-5 (training-side, NOT a clamp)",
+      "phase2_lr_end": 3e-05,
+      "phase2_lr_end_ref_frozen": 1e-05,
+      "expected_first_change_epoch": 121,
+      "first_change_epoch": 121,
+      "first_change_matches_expected": true,
+      "n_changed_full_horizon": 80,
+      "n_changed_in_this_run": 51,
+      "epochs_changed_in_this_run": [
+        121,
+        122,
+        123,
+        124,
+        125,
+        126,
+        127,
+        128,
+        129,
+        130,
+        131,
+        132,
+        133,
+        134,
+        135,
+        136,
+        137,
+        138,
+        139,
+        140,
+        141,
+        142,
+        143,
+        144,
+        145,
+        146,
+        147,
+        148,
+        149,
+        150,
+        151,
+        152,
+        153,
+        154,
+        155,
+        156,
+        157,
+        158,
+        159,
+        160,
+        161,
+        162,
+        163,
+        164,
+        165,
+        166,
+        167,
+        168,
+        169,
+        170,
+        171
+      ],
+      "best_tta_epoch": 135,
+      "n_changed_at_or_before_best_tta": 15,
+      "dose_reaches_delivery": true,
+      "lr_mult_at_best_tta": 1.0337,
+      "phase1_bitwise_unchanged": true,
+      "phase2_start_unchanged": true,
+      "endpoint_inside_phase2_range": true,
+      "decay_amplitude_kept": 0.7778,
+      "decay_amplitude_kept_ok": true,
+      "plateau_window": 8,
+      "plateau_n": 8,
+      "plateau_first_epoch": 150,
+      "plateau_last_epoch": 171,
+      "plateau_mean": 97.4963,
+      "plateau_sd": 0.016,
+      "selection_bias_pp": 0.0637,
+      "plateau_baseline_v47": 97.4625,
+      "plateau_sigma_used": 0.108,
+      "plateau_pass_line": 97.68,
+      "plateau_redline": 97.24,
+      "plateau_verdict": "NULL",
+      "plateau_advice_consistent": true,
+      "plateau_margin_at_least_2sigma": true,
+      "plateau_lines_derived_from_baseline": true,
+      "dose_delivered": true
+    },
+    "instrument": "INSTRUMENT_OK",
+    "why_this_axis": "v47 的 clamp 形态被实测判为『结构性不可观测』：剂量起点 ep168 晚于交付选择点 ep138 整整 30 轮。改用『余弦自己的终点』后，剂量从 ep121 起就在，完整覆盖交付选择窗（历史 best_tta 落在 ep138–162），且保留 78% 的衰减幅度。",
+    "paired_scope": "none: 改 lr 即改整条轨迹 ⇒ 单跑内不存在 control。本版只有跨跑判据 ⇒ 单跑 NULL 不得升级为‘轴无效’（需 3 seed）。"
+  },
+  "swa": {
+    "axis": "legacy read-only: late-window weight average (JUDGED DEAD in v46, kept for archive only)",
+    "enable": false,
+    "used_for_delivery": false,
+    "start_frac": 0.7,
+    "start_epoch": 126,
+    "end_epoch": -1,
+    "snapshot_every": 2,
+    "n_snapshots": 0,
+    "snapshot_epochs": [],
+    "delivery_source": "not_used_v51",
+    "swa_test": 0.0,
+    "swa_tta": 0.0,
+    "legacy_best_tta": 97.56,
+    "legacy_best_tta_epoch": 135,
+    "legacy_final_tta": 97.54,
+    "legacy_delivered": 97.56,
+    "swa_minus_legacy_pp": null,
+    "swa_verdict": "RETIRED_AXIS_READ_ONLY",
+    "paired_scope": "read-only archive; NOT part of any v47 criterion"
+  },
+  "history": {
+    "test": [
+      30.21,
+      39.15,
+      46.92,
+      53.22,
+      59.85,
+      71.15,
+      72.25,
+      76.41,
+      73.0,
+      77.71,
+      76.28,
+      74.02,
+      80.95,
+      85.34,
+      81.92,
+      81.68,
+      80.58,
+      80.83,
+      84.35,
+      82.53,
+      82.75,
+      84.24,
+      82.27,
+      86.62,
+      85.34,
+      84.52,
+      83.48,
+      87.37,
+      89.01,
+      85.1,
+      85.46,
+      87.6,
+      85.99,
+      85.84,
+      80.48,
+      87.04,
+      85.68,
+      85.62,
+      88.82,
+      87.62,
+      88.86,
+      86.16,
+      87.94,
+      83.77,
+      87.41,
+      89.16,
+      88.34,
+      86.3,
+      89.75,
+      87.58,
+      89.5,
+      89.47,
+      90.63,
+      86.15,
+      90.38,
+      91.23,
+      88.39,
+      91.07,
+      90.56,
+      90.72,
+      91.21,
+      90.12,
+      91.81,
+      91.83,
+      91.53,
+      91.91,
+      90.32,
+      92.0,
+      91.72,
+      91.23,
+      91.34,
+      93.41,
+      92.82,
+      92.85,
+      92.28,
+      93.17,
+      93.01,
+      93.58,
+      93.62,
+      92.78,
+      93.69,
+      94.23,
+      94.87,
+      94.18,
+      94.7,
+      94.71,
+      94.77,
+      94.95,
+      94.81,
+      95.7,
+      95.61,
+      95.12,
+      95.46,
+      95.36,
+      95.78,
+      95.81,
+      96.05,
+      95.96,
+      95.91,
+      96.28,
+      96.65,
+      96.53,
+      96.66,
+      96.53,
+      96.84,
+      96.66,
+      97.09,
+      97.0,
+      96.92,
+      96.99,
+      97.11,
+      97.22,
+      97.22,
+      97.14,
+      97.22,
+      97.18,
+      97.2,
+      97.27,
+      97.29,
+      97.26,
+      97.25,
+      97.22,
+      97.2,
+      97.25,
+      97.2,
+      97.19,
+      97.21,
+      97.23,
+      97.22,
+      97.22,
+      97.14,
+      97.19,
+      97.22,
+      97.25,
+      97.24,
+      97.17,
+      97.25,
+      97.31,
+      97.32,
+      97.28,
+      97.3,
+      97.22,
+      97.26,
+      97.28,
+      97.16,
+      97.26,
+      97.32,
+      97.25,
+      97.23,
+      97.24,
+      97.28,
+      97.24,
+      97.26,
+      97.27,
+      97.29,
+      97.32,
+      97.28,
+      97.22,
+      97.27,
+      97.21,
+      97.27,
+      97.23,
+      97.28,
+      97.26,
+      97.18,
+      97.26,
+      97.27,
+      97.27,
+      97.27,
+      97.28,
+      97.25,
+      97.27
+    ],
+    "tta": [
+      {
+        "epoch": 81,
+        "acc": 94.81
+      },
+      {
+        "epoch": 84,
+        "acc": 95.17
+      },
+      {
+        "epoch": 87,
+        "acc": 95.49
+      },
+      {
+        "epoch": 90,
+        "acc": 95.89
+      },
+      {
+        "epoch": 93,
+        "acc": 95.85
+      },
+      {
+        "epoch": 96,
+        "acc": 96.47
+      },
+      {
+        "epoch": 99,
+        "acc": 96.78
+      },
+      {
+        "epoch": 102,
+        "acc": 96.95
+      },
+      {
+        "epoch": 105,
+        "acc": 96.96
+      },
+      {
+        "epoch": 108,
+        "acc": 97.23
+      },
+      {
+        "epoch": 111,
+        "acc": 97.47
+      },
+      {
+        "epoch": 114,
+        "acc": 97.41
+      },
+      {
+        "epoch": 117,
+        "acc": 97.46
+      },
+      {
+        "epoch": 120,
+        "acc": 97.48
+      },
+      {
+        "epoch": 123,
+        "acc": 97.54
+      },
+      {
+        "epoch": 126,
+        "acc": 97.48
+      },
+      {
+        "epoch": 129,
+        "acc": 97.51
+      },
+      {
+        "epoch": 132,
+        "acc": 97.49
+      },
+      {
+        "epoch": 135,
+        "acc": 97.56
+      },
+      {
+        "epoch": 138,
+        "acc": 97.48
+      },
+      {
+        "epoch": 141,
+        "acc": 97.56
+      },
+      {
+        "epoch": 144,
+        "acc": 97.47
+      },
+      {
+        "epoch": 147,
+        "acc": 97.46
+      },
+      {
+        "epoch": 150,
+        "acc": 97.5
+      },
+      {
+        "epoch": 153,
+        "acc": 97.48
+      },
+      {
+        "epoch": 156,
+        "acc": 97.5
+      },
+      {
+        "epoch": 159,
+        "acc": 97.47
+      },
+      {
+        "epoch": 162,
+        "acc": 97.49
+      },
+      {
+        "epoch": 165,
+        "acc": 97.5
+      },
+      {
+        "epoch": 168,
+        "acc": 97.52
+      },
+      {
+        "epoch": 171,
+        "acc": 97.51
+      }
+    ]
+  },
+  "mechanism": {
+    "required_keys": [
+      "sd_anneal_enable",
+      "sd_start",
+      "sd_end",
+      "sd_mean_at_119",
+      "sd_mean_at_120",
+      "sd_zero_from_120",
+      "sd_positive_at_119",
+      "dose_delivered",
+      "sd_trace_head",
+      "sd_trace_tail",
+      "sd_mean_at_last"
+    ],
+    "sd_anneal_enable": true,
+    "sd_start": 60,
+    "sd_end": 120,
+    "sd_mean_at_119": 0.000781,
+    "sd_mean_at_120": 0.0,
+    "sd_mean_at_179": null,
+    "skipped_keys": {
+      "sd_mean_at_179": "epoch 179 not reached (actual_epochs=172, last_epoch=171)"
+    },
+    "sd_mean_at_last": {
+      "epoch": 171,
+      "mean": 0.0
+    },
+    "sd_zero_from_120": {
+      "zero_from_120": true,
+      "n_violations": 0,
+      "first_violations": []
+    },
+    "sd_positive_at_119": true,
+    "dose_delivered": true,
+    "sd_trace_head": [
+      [
+        0,
+        0.0
+      ],
+      [
+        1,
+        0.000781
+      ],
+      [
+        2,
+        0.001563
+      ]
+    ],
+    "sd_trace_tail": [
+      [
+        169,
+        0.0
+      ],
+      [
+        170,
+        0.0
+      ],
+      [
+        171,
+        0.0
+      ]
+    ],
+    "missing_keys": [],
+    "errored_keys": [],
+    "required_keys_mode": "conditional(v45)",
+    "epochs_actually_run": 172,
+    "mechanism_ok": true,
+    "mechanism_ok_legacy": true
+  },
+  "sd_trace": [
+    [
+      0,
+      0.0
+    ],
+    [
+      1,
+      0.000781
+    ],
+    [
+      2,
+      0.001563
+    ],
+    [
+      3,
+      0.002344
+    ],
+    [
+      4,
+      0.003125
+    ],
+    [
+      5,
+      0.003906
+    ],
+    [
+      6,
+      0.004688
+    ],
+    [
+      7,
+      0.005469
+    ],
+    [
+      8,
+      0.00625
+    ],
+    [
+      9,
+      0.007031
+    ],
+    [
+      10,
+      0.007812
+    ],
+    [
+      11,
+      0.008594
+    ],
+    [
+      12,
+      0.009375
+    ],
+    [
+      13,
+      0.010156
+    ],
+    [
+      14,
+      0.010938
+    ],
+    [
+      15,
+      0.011719
+    ],
+    [
+      16,
+      0.0125
+    ],
+    [
+      17,
+      0.013281
+    ],
+    [
+      18,
+      0.014063
+    ],
+    [
+      19,
+      0.014844
+    ],
+    [
+      20,
+      0.015625
+    ],
+    [
+      21,
+      0.016406
+    ],
+    [
+      22,
+      0.017187
+    ],
+    [
+      23,
+      0.017969
+    ],
+    [
+      24,
+      0.01875
+    ],
+    [
+      25,
+      0.019531
+    ],
+    [
+      26,
+      0.020313
+    ],
+    [
+      27,
+      0.021094
+    ],
+    [
+      28,
+      0.021875
+    ],
+    [
+      29,
+      0.022656
+    ],
+    [
+      30,
+      0.023438
+    ],
+    [
+      31,
+      0.024219
+    ],
+    [
+      32,
+      0.025
+    ],
+    [
+      33,
+      0.025781
+    ],
+    [
+      34,
+      0.026562
+    ],
+    [
+      35,
+      0.027344
+    ],
+    [
+      36,
+      0.028125
+    ],
+    [
+      37,
+      0.028906
+    ],
+    [
+      38,
+      0.029687
+    ],
+    [
+      39,
+      0.030469
+    ],
+    [
+      40,
+      0.03125
+    ],
+    [
+      41,
+      0.032031
+    ],
+    [
+      42,
+      0.032812
+    ],
+    [
+      43,
+      0.033594
+    ],
+    [
+      44,
+      0.034375
+    ],
+    [
+      45,
+      0.035156
+    ],
+    [
+      46,
+      0.035938
+    ],
+    [
+      47,
+      0.036719
+    ],
+    [
+      48,
+      0.0375
+    ],
+    [
+      49,
+      0.038281
+    ],
+    [
+      50,
+      0.039062
+    ],
+    [
+      51,
+      0.039844
+    ],
+    [
+      52,
+      0.040625
+    ],
+    [
+      53,
+      0.041406
+    ],
+    [
+      54,
+      0.042188
+    ],
+    [
+      55,
+      0.042969
+    ],
+    [
+      56,
+      0.04375
+    ],
+    [
+      57,
+      0.044531
+    ],
+    [
+      58,
+      0.045312
+    ],
+    [
+      59,
+      0.046094
+    ],
+    [
+      60,
+      0.046875
+    ],
+    [
+      61,
+      0.046094
+    ],
+    [
+      62,
+      0.045312
+    ],
+    [
+      63,
+      0.044531
+    ],
+    [
+      64,
+      0.04375
+    ],
+    [
+      65,
+      0.042969
+    ],
+    [
+      66,
+      0.042188
+    ],
+    [
+      67,
+      0.041406
+    ],
+    [
+      68,
+      0.040625
+    ],
+    [
+      69,
+      0.039844
+    ],
+    [
+      70,
+      0.039062
+    ],
+    [
+      71,
+      0.038281
+    ],
+    [
+      72,
+      0.0375
+    ],
+    [
+      73,
+      0.036719
+    ],
+    [
+      74,
+      0.035938
+    ],
+    [
+      75,
+      0.035156
+    ],
+    [
+      76,
+      0.034375
+    ],
+    [
+      77,
+      0.033594
+    ],
+    [
+      78,
+      0.032812
+    ],
+    [
+      79,
+      0.032031
+    ],
+    [
+      80,
+      0.03125
+    ],
+    [
+      81,
+      0.030469
+    ],
+    [
+      82,
+      0.029687
+    ],
+    [
+      83,
+      0.028906
+    ],
+    [
+      84,
+      0.028125
+    ],
+    [
+      85,
+      0.027344
+    ],
+    [
+      86,
+      0.026562
+    ],
+    [
+      87,
+      0.025781
+    ],
+    [
+      88,
+      0.025
+    ],
+    [
+      89,
+      0.024219
+    ],
+    [
+      90,
+      0.023438
+    ],
+    [
+      91,
+      0.022656
+    ],
+    [
+      92,
+      0.021875
+    ],
+    [
+      93,
+      0.021094
+    ],
+    [
+      94,
+      0.020313
+    ],
+    [
+      95,
+      0.019531
+    ],
+    [
+      96,
+      0.01875
+    ],
+    [
+      97,
+      0.017969
+    ],
+    [
+      98,
+      0.017188
+    ],
+    [
+      99,
+      0.016406
+    ],
+    [
+      100,
+      0.015625
+    ],
+    [
+      101,
+      0.014844
+    ],
+    [
+      102,
+      0.014063
+    ],
+    [
+      103,
+      0.013281
+    ],
+    [
+      104,
+      0.0125
+    ],
+    [
+      105,
+      0.011719
+    ],
+    [
+      106,
+      0.010937
+    ],
+    [
+      107,
+      0.010156
+    ],
+    [
+      108,
+      0.009375
+    ],
+    [
+      109,
+      0.008594
+    ],
+    [
+      110,
+      0.007812
+    ],
+    [
+      111,
+      0.007031
+    ],
+    [
+      112,
+      0.00625
+    ],
+    [
+      113,
+      0.005469
+    ],
+    [
+      114,
+      0.004687
+    ],
+    [
+      115,
+      0.003906
+    ],
+    [
+      116,
+      0.003125
+    ],
+    [
+      117,
+      0.002344
+    ],
+    [
+      118,
+      0.001562
+    ],
+    [
+      119,
+      0.000781
+    ],
+    [
+      120,
+      0.0
+    ],
+    [
+      121,
+      0.0
+    ],
+    [
+      122,
+      0.0
+    ],
+    [
+      123,
+      0.0
+    ],
+    [
+      124,
+      0.0
+    ],
+    [
+      125,
+      0.0
+    ],
+    [
+      126,
+      0.0
+    ],
+    [
+      127,
+      0.0
+    ],
+    [
+      128,
+      0.0
+    ],
+    [
+      129,
+      0.0
+    ],
+    [
+      130,
+      0.0
+    ],
+    [
+      131,
+      0.0
+    ],
+    [
+      132,
+      0.0
+    ],
+    [
+      133,
+      0.0
+    ],
+    [
+      134,
+      0.0
+    ],
+    [
+      135,
+      0.0
+    ],
+    [
+      136,
+      0.0
+    ],
+    [
+      137,
+      0.0
+    ],
+    [
+      138,
+      0.0
+    ],
+    [
+      139,
+      0.0
+    ],
+    [
+      140,
+      0.0
+    ],
+    [
+      141,
+      0.0
+    ],
+    [
+      142,
+      0.0
+    ],
+    [
+      143,
+      0.0
+    ],
+    [
+      144,
+      0.0
+    ],
+    [
+      145,
+      0.0
+    ],
+    [
+      146,
+      0.0
+    ],
+    [
+      147,
+      0.0
+    ],
+    [
+      148,
+      0.0
+    ],
+    [
+      149,
+      0.0
+    ],
+    [
+      150,
+      0.0
+    ],
+    [
+      151,
+      0.0
+    ],
+    [
+      152,
+      0.0
+    ],
+    [
+      153,
+      0.0
+    ],
+    [
+      154,
+      0.0
+    ],
+    [
+      155,
+      0.0
+    ],
+    [
+      156,
+      0.0
+    ],
+    [
+      157,
+      0.0
+    ],
+    [
+      158,
+      0.0
+    ],
+    [
+      159,
+      0.0
+    ],
+    [
+      160,
+      0.0
+    ],
+    [
+      161,
+      0.0
+    ],
+    [
+      162,
+      0.0
+    ],
+    [
+      163,
+      0.0
+    ],
+    [
+      164,
+      0.0
+    ],
+    [
+      165,
+      0.0
+    ],
+    [
+      166,
+      0.0
+    ],
+    [
+      167,
+      0.0
+    ],
+    [
+      168,
+      0.0
+    ],
+    [
+      169,
+      0.0
+    ],
+    [
+      170,
+      0.0
+    ],
+    [
+      171,
+      0.0
+    ]
+  ],
+  "instrument": {
+    "purpose": "instrument fix (read-only fields + gate strictness); SEED unchanged from v44",
+    "epochs_config": 180,
+    "actual_epochs": 172,
+    "last_epoch": 171,
+    "early_stopped": true,
+    "stop_reason": "TTA no improvement for 12 evaluations",
+    "history_len_matches": true,
+    "epoch_field_is_config": true,
+    "epoch_field_note": "results['epoch'] == TRAIN_EPOCHS (config constant), NOT epochs actually run",
+    "final_tta_measures": "best_tta_ckpt",
+    "final_tta_source_epoch": 135,
+    "final_tta_is_last_epoch": false,
+    "final_tta_note": "final_tta re-measures the best_tta checkpoint, NOT the last-epoch weights; it inherits max-of-N selection bias",
+    "mechanism_ok": true,
+    "mechanism_ok_legacy": true,
+    "errored_keys": [],
+    "skipped_keys": {
+      "sd_mean_at_179": "epoch 179 not reached (actual_epochs=172, last_epoch=171)"
+    },
+    "checks": {
+      "actual_epochs_positive": true,
+      "history_len_matches": true,
+      "early_stop_fields_written": true,
+      "mechanism_ok_strict": true,
+      "no_errored_keys": true,
+      "skipped_keys_declared": true,
+      "final_tta_measure_declared": true
+    },
+    "verdict": "INSTRUMENT_OK",
+    "same_seed_replicate_of_v44": {
+      "seed": 1234,
+      "v44_seed": 1234,
+      "same_seed": true,
+      "verdict": "NOT_A_SAME_SEED_REPLICATE",
+      "final_tta": 97.54,
+      "v44_final_tta": 97.52,
+      "delta_tta_pp": 0.02,
+      "actual_epochs": 172,
+      "v44_actual_epochs": 157,
+      "actual_epochs_match": false,
+      "fp_test_matches_v44": false,
+      "fp_tta_matches_v44": false,
+      "v44_fp_test": "ae29234502dcafa684f6bd622a7dc7495a108db1",
+      "v44_fp_tta": "f421be4748abdf7ae8e69753210e37bc7df97f9f"
+    }
+  },
+  "replicate": {
+    "purpose": "z-combination with v43 (kept for continuity); NOT a new independent observation",
+    "note": "SEED equals v44 => this run is an instrument replicate of v44, not independent of it. The third independent seed is v46.",
+    "code_differs_from_v44_by": [
+      "read-only record fields",
+      "mechanism gate strictness"
+    ],
+    "hist_final_tta_mean": 97.237,
+    "hist_final_tta_sd": 0.092,
+    "v43_seed": 42,
+    "v43_final_tta": 97.41,
+    "z_v43": 1.8804,
+    "final_tta": 97.54,
+    "z_run": 3.2935,
+    "z_combined": 3.6585,
+    "replicate_verdict": "CONFIRMED",
+    "independent_observation": true,
+    "independent_of_v44": false,
+    "seed_differs_from_v43": true,
+    "curves_differ_from_v43": true,
+    "fp_test": "1f36697d34de5ba742d925eba90a9bc9550a01f3",
+    "fp_tta": "1f4984368303ccffb7fad47f8ea599b18e7b0d5d",
+    "v43_fp_test": "58746632913adbd84d09e77d06fde3b0148439da",
+    "v43_fp_tta": "a7c582f11ecd7fc4d1cbc6c3445b510bea345bbc",
+    "backtrack_advice": "DO_NOT_BACKTRACK_CODE",
+    "backtrack_reason": "code differs from cnn10_v44.py only by read-only record fields and gate strictness; a different reading means the instrument change leaked into training, not a recipe regression",
+    "scope_note": "本字段属于【复跑判据】块（v44 血脉口径：代码只差 SEED ⇒ 低读数是 seed 方差，动作是换 seed 而不是回退代码）。★ 与本版【交付判据】的红线（delivered <= 97.27 ⇒ 回退 cnn10_v46.py）是两个不同作用域，不要混读：前者管'代码要不要退'，后者管'交付权重链要不要退'。"
+  }
+}

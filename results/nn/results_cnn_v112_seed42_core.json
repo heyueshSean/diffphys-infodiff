@@ -1,0 +1,1969 @@
+{
+  "version": "v112",
+  "base": "cnn10_v51.py",
+  "base_sha1": "3516a363737c1930019ba97f7c2853e67fc0eee2",
+  "prev_version": "v111",
+  "prev_sha1": "afd532d38074a77a062d0af81725b66191ed9910",
+  "rolled_back_to": "cnn10_v110.py (逐字父本；v111 的场频带 clamp 轴按其自身 followup① 归档 ⇒ 本版改走交付/收获通道：交付读数的视图群)",
+  "axis": "v112 = cnn10_v110.py's training math VERBATIM + ONE axis: HARVEST-CHANNEL VIEW SET (the delivery readout's viewset). The delivery readout goes from 2 views (identity + horizontal flip) to 10 views: the 5 crop positions of the 40x40 zero-padded canvas (4 corners + center, i.e. the support family of the training-time RandomCrop(32, padding=4)) x {identity, hflip}, logits-averaged with the production rule. NOTHING in the training math changes (no parameter, no schedule, no loss term, no physics constant, no RNG site), so this run must reproduce the v110 fingerprint (best_acc 97.39 / best_tta 97.50@e156 / delivered 97.50 / actual_epochs 180). WHY (v111 readout + v111's own followup clause 1, 2026-10-25): v111 was BAND_DELIVERED but precision-NULL (97.46 vs 97.50 = -0.04pp = -0.24 sigma), and v111 itself ruled the additive injection channel ARCHIVED because the field output is a filtered copy of the backbone feature map and therefore informationally redundant; the remaining lanes are the constraint channel (action surface of w_phys / pinn) or the delivery/harvest channel. The weight-side harvest family is already dead (v46 SWA / v47 clamp / v48 endpoint, all <= 0.108pp noise floor), but the READOUT-side viewset has never been tried in this line. WHY THIS IS THE RIGHT VIEW SET (pre-registered, not a grid search): training's first augmentation is RandomCrop(32, padding=4), so the model is trained to be invariant to the 81 translation positions of a 40x40 zero-padded canvas, while the readout only ever looked at the center position; and the Bessel/Matern prior itself is isotropic (a function of |k| only), i.e. it ASSUMES translation invariance => the readout should average over that invariance group. The aggregation operator is deliberately LEFT at the production rule (mean of logits, then argmax) so this version changes only 'how many pictures', not 'how they are combined' (avoiding a third parameterization of the same ray). WHY THE RULER MUST CHANGE: the cross-run sigma_diff = 0.169pp is the noise between two INDEPENDENT trainings; this axis compares two READOUTS of the SAME weights on the SAME images, so the comparison is PAIRED: trajectory and seed noise vanish, and the residual scale is set by the number of discordant samples (exact McNemar binomial). The verdict therefore explicitly does NOT use sigma_diff (a changed ruler must be declared). CRITERION (pre-registered): HARVEST_VIEWSET_DELIVERED iff paired delta >= +0.05pp AND McNemar two-sided p <= 0.05; NULL if |delta| < 0.05pp or p > 0.05; NEGATIVE if delta <= -0.05pp with p <= 0.05; SELFTEST_FAILED / READOUT_ERROR otherwise.",
+  "seed": 42,
+  "v110_sam": {
+    "axis": "v110 = cnn10_v103.py training math + ONE axis: SOBOLEV-METRIC SAM. The SAM trust region ball (Euclidean) is replaced by the metric induced by the network's own Bessel potential operator, K(k) = (1 + (lam/nu)|k|^2)^{-s}, taken from the field's running lam/nu statistics (pooled) - zero new parameters, zero new RNG in the metric. The ascent direction is eps = rho * K*g / ||K*g||_2 (K acts on the two spatial dims of conv kernels only), and the update uses the gradient at w+eps. Nothing else moves: no lr / momentum / mixup-strength scalar is touched. WHY (v109 readout = NULL, 2026-10-23): six consecutive versions across three action surfaces (feature injection v103-v105, optimizer scalars v106-v108, data side v109) are all NULL or negative, and diagnosed defects are shared - (a) the control signal smooth is ITSELF inside the loss (w_phys*smooth, peak 0.15) so it is actively pushed down and any z-score degenerates into one-way drift (v107 scale_mean=1.0998, v108 mu_std=0.011 with mu_mean=0.9186, v109 NULL): the signal has no usable high-frequency content; (b) the ones that do act act on the fragile early high-lr phase (v107 -0.45pp, v108 -1.60pp early) while the tail floor-lr regime is dose-insensitive, i.e. any extra time-varying control is just a perturbation of an already tuned schedule. SAM changes WHERE we step instead of HOW FAST, and is one of the few mechanisms with a documented effect (+0.3 to 1.0pp clean accuracy) far above this line's sigma_diff=0.169 measurement floor. TECHNICAL PREREQUISITE (new pitfall 331): the line's existing _dft_axis equals the true DFT bins only for EVEN N; conv kernels are mostly 3x3 (ODD), where the old grid is off by half a bin and a constant kernel is attenuated to 0.313 instead of 1.0 - so this version carries its own parity-safe _v110_freq_axis (fftfreq + fftshift) and self-tests 'a constant kernel passes unchanged'. DISCLOSED PURITY LOSS: two forward-backward per step (~1.8-2x wall clock) and the second forward draws another StochasticDepth mask, so the RNG stream is no longer bit-comparable with v103; cross-version pairing still uses sigma_diff=0.169. ATTRIBUTION PRE-REGISTRATION: if this version gains beyond sigma_diff, the next version MUST be plain SAM (K identical 1, same rho) as the control run before claiming the Sobolev metric itself is what helped.",
+    "selftest": {
+      "n_pass": 20,
+      "n_expected": 20,
+      "all_pass": true,
+      "failed": [],
+      "error": null,
+      "completed": true
+    },
+    "selftest_cases_source": 20,
+    "stats": {
+      "n_steps": 34125,
+      "n_applied": 34125,
+      "n_degenerate": 0,
+      "n_second_fail": 0,
+      "applied_frac": 1.0,
+      "ratio_mean": 1.4021133475252778,
+      "dir_ratio_mean": 0.913987389045593,
+      "dir_ratio_min": 0.8839575931212794,
+      "dir_ratio_max": 0.9876823095913243,
+      "error": null
+    },
+    "thresholds": {
+      "rho": 0.05,
+      "sobolev_s": 1.0,
+      "ratio_fallback": 1.5649,
+      "dir_ratio_lo": 0.05,
+      "dir_ratio_hi": 0.95,
+      "delivered_min_frac": 0.9,
+      "selftest_cases": 20
+    },
+    "criterion": {
+      "baseline_v103_acc": 97.37,
+      "baseline_note": "v103 的 97.42 是 selection_bias_pp=0.0475 修正前的 max-of-N 孤点；配对基线取 97.37。sigma_diff=0.169（跨版本配对 RMS）。",
+      "sigma_diff_pp": 0.169,
+      "note": "本版改的是更新几何 ⇒ 训练数学已变，不与 v103 同ան trajectory；第二轮 forward 多抽一次 StochasticDepth 掩码 ⇒ RNG 流不再逐位可比。归因预注册：**若涨幅越过 sigma_diff，下一版必须是裸 SAM（K≡1，同 rho）**作对照，才能拆开『SAM 的功劳』与『Sobolev 度量的功劳』。"
+    },
+    "verdict": "SAM_SOBOLEV_DELIVERED",
+    "self_sha1": "77d894fbb6be9e92e41c021dbf698dc3f8e12cc8",
+    "note": "判的是**机制**：applied_frac>=0.9 且 ||K*g||/||g|| 均值 ∈ (0.05, 0.95)。高于 0.95 ⇒ 低通没起作用（退化成裸 SAM）；低于 0.05 ⇒ 度量把自己压没了。"
+  },
+  "v112_harvest": {
+    "axis": "v112 = cnn10_v110.py's training math VERBATIM + ONE axis: HARVEST-CHANNEL VIEW SET (the delivery readout's viewset). The delivery readout goes from 2 views (identity + horizontal flip) to 10 views: the 5 crop positions of the 40x40 zero-padded canvas (4 corners + center, i.e. the support family of the training-time RandomCrop(32, padding=4)) x {identity, hflip}, logits-averaged with the production rule. NOTHING in the training math changes (no parameter, no schedule, no loss term, no physics constant, no RNG site), so this run must reproduce the v110 fingerprint (best_acc 97.39 / best_tta 97.50@e156 / delivered 97.50 / actual_epochs 180). WHY (v111 readout + v111's own followup clause 1, 2026-10-25): v111 was BAND_DELIVERED but precision-NULL (97.46 vs 97.50 = -0.04pp = -0.24 sigma), and v111 itself ruled the additive injection channel ARCHIVED because the field output is a filtered copy of the backbone feature map and therefore informationally redundant; the remaining lanes are the constraint channel (action surface of w_phys / pinn) or the delivery/harvest channel. The weight-side harvest family is already dead (v46 SWA / v47 clamp / v48 endpoint, all <= 0.108pp noise floor), but the READOUT-side viewset has never been tried in this line. WHY THIS IS THE RIGHT VIEW SET (pre-registered, not a grid search): training's first augmentation is RandomCrop(32, padding=4), so the model is trained to be invariant to the 81 translation positions of a 40x40 zero-padded canvas, while the readout only ever looked at the center position; and the Bessel/Matern prior itself is isotropic (a function of |k| only), i.e. it ASSUMES translation invariance => the readout should average over that invariance group. The aggregation operator is deliberately LEFT at the production rule (mean of logits, then argmax) so this version changes only 'how many pictures', not 'how they are combined' (avoiding a third parameterization of the same ray). WHY THE RULER MUST CHANGE: the cross-run sigma_diff = 0.169pp is the noise between two INDEPENDENT trainings; this axis compares two READOUTS of the SAME weights on the SAME images, so the comparison is PAIRED: trajectory and seed noise vanish, and the residual scale is set by the number of discordant samples (exact McNemar binomial). The verdict therefore explicitly does NOT use sigma_diff (a changed ruler must be declared). CRITERION (pre-registered): HARVEST_VIEWSET_DELIVERED iff paired delta >= +0.05pp AND McNemar two-sided p <= 0.05; NULL if |delta| < 0.05pp or p > 0.05; NEGATIVE if delta <= -0.05pp with p <= 0.05; SELFTEST_FAILED / READOUT_ERROR otherwise.",
+    "selftest": {
+      "n_pass": 18,
+      "n_expected": 18,
+      "all_pass": true,
+      "completed": true,
+      "error": null,
+      "checks": [
+        {
+          "name": "view_shape",
+          "pass": true,
+          "msg": "shape=(1, 10, 3, 32, 32)"
+        },
+        {
+          "name": "view_count_is_10",
+          "pass": true,
+          "msg": "n_views=10"
+        },
+        {
+          "name": "center_is_original",
+          "pass": true,
+          "msg": "中心位（索引 8）必须逐位等于原图"
+        },
+        {
+          "name": "flip_pairing",
+          "pass": true,
+          "msg": "每个裁剪位的翻转视图必须是它的镜像"
+        },
+        {
+          "name": "pad_zero_in_pixel_space",
+          "pass": true,
+          "msg": "角位的上/左 4 行必须是像素空间 0"
+        },
+        {
+          "name": "normalized_border_value",
+          "pass": true,
+          "msg": "归一化后的边界值必须是 (0-mean)/std，而不是 0"
+        },
+        {
+          "name": "legacy_input_recovered",
+          "pass": true,
+          "msg": "中心位归一化后必须等于生产 transform_test 的结果"
+        },
+        {
+          "name": "mcnemar_p_0_5",
+          "pass": true,
+          "msg": "b=0,c=5 => 2*2^-5 = 0.0625，实测 0.0625"
+        },
+        {
+          "name": "mcnemar_p_5_5",
+          "pass": true,
+          "msg": "b=c=5 => 1.0，实测 1"
+        },
+        {
+          "name": "mcnemar_p_10_0",
+          "pass": true,
+          "msg": "b=10,c=0 => 2*2^-10，实测 0.001953125"
+        },
+        {
+          "name": "mcnemar_p_3_1",
+          "pass": true,
+          "msg": "b=3,c=1 => 0.625，实测 0.625"
+        },
+        {
+          "name": "verdict_delivered",
+          "pass": true,
+          "msg": "Δ=+0.10pp, p=0.001 => DELIVERED"
+        },
+        {
+          "name": "verdict_null_small_delta",
+          "pass": true,
+          "msg": "Δ=+0.02pp < 门槛 => NULL"
+        },
+        {
+          "name": "verdict_null_insignificant",
+          "pass": true,
+          "msg": "Δ 大但 p 不显著 => NULL"
+        },
+        {
+          "name": "verdict_negative",
+          "pass": true,
+          "msg": "Δ=-0.10pp 且显著 => NEGATIVE"
+        },
+        {
+          "name": "verdict_selftest_failed",
+          "pass": true,
+          "msg": "自测不过 => 读数不可信"
+        },
+        {
+          "name": "verdict_readout_error",
+          "pass": true,
+          "msg": "读数崩了 => 降级"
+        },
+        {
+          "name": "selftest_consumes_no_rng",
+          "pass": true,
+          "msg": "自测不得消耗全局 RNG（否则训练轨迹偏、指纹复现不了）"
+        }
+      ]
+    },
+    "selftest_cases_source": 18,
+    "readout": {
+      "ok": true,
+      "n_test": 10000,
+      "acc_legacy_2view_pp": 97.52,
+      "acc_viewset_10view_pp": 97.34,
+      "delta_pp": -0.18,
+      "mcnemar_b": 47,
+      "mcnemar_c": 29,
+      "mcnemar_p": 0.05045241,
+      "mde_pp": 0.1709,
+      "discordance_rate": 0.76,
+      "per_view_acc_pp": [
+        96.96,
+        96.93,
+        96.89,
+        97.0,
+        96.9,
+        96.92,
+        96.94,
+        96.92,
+        97.4,
+        97.38
+      ],
+      "legacy_vs_recorded_final_tta_pp": 0.0,
+      "note": "legacy 臂与生产 final_tta 的差应当 ≈0（同一批图、同一份权重）；非零说明缓冲区漂移或视图构造有偏。mde_pp = 配对尺度下 95% 的最小可检出差（由不一致对数决定），不是跨跑 σ_diff。"
+    },
+    "verdict": "HARVEST_VIEWSET_NULL",
+    "criterion": {
+      "ruler": "same-weights paired readout (exact McNemar binomial) on 10000 test images",
+      "sigma_diff_pp": 0.169,
+      "sigma_diff_applies": false,
+      "sigma_diff_note": "cross-run sigma_diff = 0.169pp is the noise between two INDEPENDENT trainings; this axis compares two READOUTS of the SAME weights on the SAME images => paired scale applies (see readout.mde_pp), sigma_diff does NOT.",
+      "delta_min_pp": 0.05,
+      "mcnemar_alpha": 0.05,
+      "views": "5 crop positions of the 40x40 zero-padded canvas (4 corners + center) x {id, hflip} = 10",
+      "aggregation": "mean of logits then argmax (production rule, unchanged)",
+      "baseline": "same-weights legacy 2-view readout computed inside the same forward batch (views 8 and 9) -- NOT a cross-run number",
+      "note": "本版 delivered（2 视图口径）保持与 v45/v47/v48/v110 同尺以便跨版可比；10 视图的新口径数字单列，口径升级须由下一版按 followup 执行（含 σ 重锚）。"
+    },
+    "fingerprint": {
+      "expected": {
+        "best_acc": 97.39,
+        "best_tta_acc": 97.5,
+        "best_tta_epoch": 156,
+        "final_tta": 97.5,
+        "delivered": 97.5,
+        "actual_epochs": 180,
+        "early_stopped": false
+      },
+      "observed": {
+        "best_acc": 97.48,
+        "best_tta_acc": 97.52,
+        "best_tta_epoch": 138,
+        "final_tta": 97.52,
+        "delivered": 97.52,
+        "actual_epochs": 175,
+        "early_stopped": true
+      },
+      "match": false,
+      "best_tta_epoch_match": false,
+      "best_tta_epoch_note": "best_tta_epoch 只记录不断言：v110 的 TTA 序列在 ep156 与 ep177 同为 97.50（首胜规则记 156），『哪个 epoch 先到 97.50』是脆口径；轨迹一致性由三个准确率 + actual_epochs + early_stopped 承担。",
+      "tol_pp": 0.05,
+      "why": "训练数学与 v110 逐字相同 ⇒ 指纹应当复现。不复现多半是 GPU 数不同（BATCH_SIZE = 128 × N_GPUS 变了）或环境漂移；此时跨版对照作废，但**同权重配对**结论仍然成立（配对比较不依赖跨跑可比）。"
+    },
+    "followup": {
+      "if_DELIVERED": "下一版把**收尾读数**的主口径切到 10 视图，并**重锚**跨跑 σ（同一权重两种读数的配对尺度已实测；跨跑 σ 需另测），同时不再试第三种视图集（锁死条款）。",
+      "if_NULL": "视图群判死（读数侧只剩『聚合算子』未试，但那是同一射线的第三种参数化 ⇒ 本线不再做）⇒ 下一版回**约束通道**：把 w_phys 的作用面从『场输出粗糙度』改为『只作用在场参数上』，兑现 v36 被动先验原则。",
+      "if_NEGATIVE": "多视图有害（零填充角位可能分布外）⇒ 归档视图群，交付读数保持 2 视图；下一版同样回约束通道。",
+      "if_FINGERPRINT_MISMATCH": "先查 GPU 数 / BATCH_SIZE / 环境；轴结论（同权重配对）仍可用，但不得用于跨版数字比较。"
+    },
+    "self_sha1": "77d894fbb6be9e92e41c021dbf698dc3f8e12cc8"
+  },
+  "batch_size": 256,
+  "n_gpus": 2,
+  "epoch": 180,
+  "actual_epochs": 175,
+  "early_stopped": true,
+  "best_acc": 97.48,
+  "best_epoch": 162,
+  "best_tta_acc": 97.52,
+  "best_tta_epoch": 138,
+  "final_tta": 97.52,
+  "ens_acc": 97.43,
+  "ens_tta": 97.53,
+  "delivered": 97.52,
+  "delivered_source": "final_tta_legacy_max_of_n(v49 交付链零后处理，口径与 v45/v47/v48 同尺)",
+  "delivered_is_max_of_n": true,
+  "backtrack_redline": 97.04,
+  "backtrack_needed": false,
+  "delivery_backtrack_advice": "DO_NOT_BACKTRACK",
+  "delivery_backtrack_scope": "本字段属于【交付判据】块：delivered <= 97.04 时回退到 cnn10_v46.py（逐字）。与复跑判据块的 backtrack_advice(DO_NOT_BACKTRACK_CODE) 作用域不同。",
+  "verdict": "NULL",
+  "lr_floor": {
+    "axis": "RETIRED in v48: late-phase lr clamp. Kept only as a machine-checkable retirement record.",
+    "enable": false,
+    "floor_ratio_of_lr_base": 0.0002,
+    "floor_abs_lr": 2e-05,
+    "from_epoch": 120,
+    "first_bite_epoch": -1,
+    "n_bites_in_this_run": 0,
+    "n_bites_train_window": 0,
+    "n_bites_full_horizon": 0,
+    "bites_epochs_in_this_run": [],
+    "clamp_retired_clean": true,
+    "checks": {
+      "floor_enabled": false,
+      "floor_ratio": 0.0002,
+      "floor_abs_lr": 2e-05,
+      "from_epoch": 120,
+      "expected_first_bite": -1,
+      "first_bite_epoch": -1,
+      "first_bite_matches_expected": true,
+      "n_bites_full_horizon": 0,
+      "n_bites_in_this_run": 0,
+      "bites_epochs_in_this_run": [],
+      "unchanged_before_from_epoch": true,
+      "floor_inside_phase2_range": true,
+      "lr_never_lowered": true,
+      "from_epoch_is_phase_boundary": true,
+      "n_bites_train_window_is_expected": true,
+      "n_bites_full_horizon_is_expected": true,
+      "clamp_retired_clean": true,
+      "delivery_is_unprocessed": true,
+      "verdict_advice_consistent": true,
+      "verdict_is_known": true
+    },
+    "instrument": "INSTRUMENT_OK",
+    "why_retired": "v47 实测：clamp 首个咬住点 ep168，而交付权重存在 ep138 ⇒ 剂量窗口与交付窗口不相交，delivered 在数学上不含本轴信息（NULL 不可归因）。且要把 clamp 提前到 ep138 之前，floor 须 >= 8.1e-5（phase2 峰值 1.0e-4 的 81%）⇒ 等于删掉 phase2 余弦波形 = 覆辙 148。⇒ 换参数化：改余弦自己的终点。",
+    "paired_scope": "retired; NOT part of any v48 criterion"
+  },
+  "determinism": {
+    "axis": "operator-level determinism hardening (cuBLAS workspace + deterministic algorithms)",
+    "probe_batch": 16,
+    "probe_seed": 2026092,
+    "cublas_workspace_config": ":4096:8",
+    "cudnn_deterministic": true,
+    "cudnn_benchmark": false,
+    "error": null,
+    "fallback_applied": false,
+    "nondeterministic_mode": {
+      "loss_1": 2.48468709,
+      "loss_2": 2.48468709,
+      "loss_abs_diff": 0.0,
+      "loss_bitwise_identical": true,
+      "logits_bitwise_identical": true,
+      "n_params_compared": 190,
+      "n_params_with_grad_diff": 145,
+      "grads_bitwise_identical": false,
+      "max_abs_grad_diff": 1.722574234008789e-05,
+      "bitwise_identical_overall": false
+    },
+    "deterministic_mode": {
+      "loss_1": 2.48468709,
+      "loss_2": 2.48468709,
+      "loss_abs_diff": 0.0,
+      "loss_bitwise_identical": true,
+      "logits_bitwise_identical": true,
+      "n_params_compared": 190,
+      "n_params_with_grad_diff": 0,
+      "grads_bitwise_identical": true,
+      "max_abs_grad_diff": 0.0,
+      "bitwise_identical_overall": true
+    },
+    "final_use_deterministic_algorithms": true,
+    "axis_effective": true,
+    "elapsed_s": 3.36,
+    "verdict": "DETERMINISM_ACHIEVED",
+    "axis_verdict": "DETERMINISM_ACHIEVED"
+  },
+  "gate1_inject": {
+    "axis": "gate1 fixed injection coefficient 0.6 -> 0.9 (layer1 physics-field injection)",
+    "weight_old": 0.6,
+    "weight_new": 0.9,
+    "axis_effective": true,
+    "design_domain": [
+      0.05,
+      0.9
+    ],
+    "design_domain_source": "Gate(learnable=True) 的 alpha 经 soft_bound 界定在 [0.05, 0.9]；0.9 即该设计域上界，0.6 是低于上界的硬编码常量。",
+    "which_gate": "gate1 (layer1, FixedDiffusion 256ch, learnable=False)",
+    "why_gate1_not_gate23": "gate2/gate3 是 learnable ⇒ 改它们的 init/界会被优化器补偿掉；gate1 是固定常量 ⇒ 改它才有持续效应。",
+    "dose_from_epoch": 0,
+    "dose_reaches_delivery": true,
+    "why_this_axis": "物理场进主干的唯一通道是 Gate 的加性注入；gate1 是整条物理链路上唯一的硬编码字面量（自 v9 起从未被单独调过）。把它提到设计域上界，检验『layer1 固定注入是否被设低了』。与 v50 的 pinn 不同族（注入强度 ≠ 平滑惩罚剂量），故不构成『同族第三个补丁』。",
+    "paired_scope": "none: changing an injection strength changes the whole trajectory ⇒ no in-run control. Cross-run criterion only; single-run NULL must NOT be read as 'axis dead' (needs 3 seed)."
+  },
+  "pinn": {
+    "axis": "pinn (deep-feature spatial smoothness) regularization weight 0.08 -> 0.04 (halved)",
+    "weight_old": 0.08,
+    "weight_new": 0.04,
+    "axis_effective": true,
+    "dose_from_epoch": 0,
+    "dose_reaches_delivery": true,
+    "scope": "v50 axis record; NOT part of any v51 criterion (v50 实跑 NULL，本版原样保留该系数)",
+    "why_this_axis": "pinn = mean(dx^2)+mean(dy^2) of layer4 output (deep) penalizes BACKBONE feature gradients directly, which conflicts with the v36 principle 'physics must be a passive prior; regularization only acts on field params, never on backbone features'. Halving it (0.08->0.04) weakens that backbone penalty while keeping a mild smoothness floor. This is a recipe-domain change (changes optimizer reachable set), not a param-level clamp.",
+    "paired_scope": "none: changing a loss weight changes the whole trajectory ⇒ no in-run control. Cross-run criterion only; single-run NULL must NOT be read as 'axis dead' (needs 3 seed)."
+  },
+  "noise_floor": {
+    "sigma_diff_pp": 0.169,
+    "sigma_source": "v48 实跑 97.4625（末 8 次 TTA 均值）；σ_diff 来源 = 归档定案的**四对**同口径跑 |Δdelivered| 的 RMS：v45/v46=0.120、v48/v49=0.040、v44/v54=0.140、v51/v55=0.280 ⇒ RMS = 0.169pp。★ 该 σ 是**实测**，不是 n=3 估计，也不是一对的运气。",
+    "pass_margin_pp": 0.3375,
+    "old_v47_v48_margin_pp": 0.1,
+    "old_margin_in_sigma": 0.592,
+    "margin_at_least_2sigma": true,
+    "lines_derived_from_baseline": true,
+    "sigma_measured_constant": 0.169,
+    "note": "★ v47/v48 的 PASS 边距 0.10pp 只有 0.592σ（按 v100 修正后的 σ=0.169）⇒ 那两个 NULL 是算术上被预先决定的，不构成『轴无效』的证据。以后 B 线 PASS 边距不得小于 2σ_diff。★ [v100] σ 自身也修正过：0.108（一对）→ 0.169（四对 RMS），旧常数只有新值的 0.639，即低估 1.565×。"
+  },
+  "text_sync": {
+    "axis_field_mentions_version": true,
+    "axis_field_mentions_real_axis": true,
+    "axis_field_is_shared_constant": true,
+    "axis_field_actually_equals_constant": true,
+    "version_is_v112": true,
+    "banner_phase2_end_derived": {
+      "ok": true,
+      "n_interpolated": 3,
+      "hardcoded_lines": [],
+      "error": null
+    },
+    "banner_phase2_end_hardcoded_lines": [],
+    "note": "[v110] axis 文案由常量 AXIS_V110 提供、banner 里的 phase2 终点与版本号从常量派生 ⇒ 『打印出来的配置』结构上不可能与真实配置脱钩（覆辙 113/119）。"
+  },
+  "lr_tail": {
+    "axis": "phase2 cosine endpoint 1e-5 -> 3.0e-5 (training-side, NOT a clamp)",
+    "enable": true,
+    "phase2_lr_end": 3e-05,
+    "phase2_lr_end_ref_frozen": 1e-05,
+    "first_change_epoch": 121,
+    "n_changed_in_this_run": 54,
+    "epochs_changed_in_this_run": [
+      121,
+      122,
+      123,
+      124,
+      125,
+      126,
+      127,
+      128,
+      129,
+      130,
+      131,
+      132,
+      133,
+      134,
+      135,
+      136,
+      137,
+      138,
+      139,
+      140,
+      141,
+      142,
+      143,
+      144,
+      145,
+      146,
+      147,
+      148,
+      149,
+      150,
+      151,
+      152,
+      153,
+      154,
+      155,
+      156,
+      157,
+      158,
+      159,
+      160,
+      161,
+      162,
+      163,
+      164,
+      165,
+      166,
+      167,
+      168,
+      169,
+      170,
+      171,
+      172,
+      173,
+      174
+    ],
+    "best_tta_epoch": 138,
+    "dose_reaches_delivered_selection": true,
+    "dose_reaches_plateau_window": true,
+    "n_plateau_epochs_under_dose": 8,
+    "plateau_window_fully_inside_dose": true,
+    "lr_mult_at_best_tta": 1.0506,
+    "dose_delivered": true,
+    "dose_delivered_delivered_channel": true,
+    "lr_tail_delivered_verdict": "DOSE_DELIVERED",
+    "best_tta_argmax_epochs": [
+      138,
+      144,
+      150
+    ],
+    "best_tta_argmax_n": 3,
+    "best_tta_tie_break_rule": "first_wins",
+    "selection_epoch_inside_dose": true,
+    "any_argmax_epoch_inside_dose": true,
+    "plateau_mean": 97.4363,
+    "plateau_sd": 0.0812,
+    "plateau_n": 8,
+    "plateau_window_epochs": [
+      153,
+      174
+    ],
+    "selection_bias_pp": 0.0837,
+    "plateau_verdict": "NULL",
+    "checks": {
+      "axis": "phase2 cosine endpoint 1e-5 -> 3.0e-5 (training-side, NOT a clamp)",
+      "phase2_lr_end": 3e-05,
+      "phase2_lr_end_ref_frozen": 1e-05,
+      "expected_first_change_epoch": 121,
+      "first_change_epoch": 121,
+      "first_change_matches_expected": true,
+      "n_changed_full_horizon": 80,
+      "n_changed_in_this_run": 54,
+      "epochs_changed_in_this_run": [
+        121,
+        122,
+        123,
+        124,
+        125,
+        126,
+        127,
+        128,
+        129,
+        130,
+        131,
+        132,
+        133,
+        134,
+        135,
+        136,
+        137,
+        138,
+        139,
+        140,
+        141,
+        142,
+        143,
+        144,
+        145,
+        146,
+        147,
+        148,
+        149,
+        150,
+        151,
+        152,
+        153,
+        154,
+        155,
+        156,
+        157,
+        158,
+        159,
+        160,
+        161,
+        162,
+        163,
+        164,
+        165,
+        166,
+        167,
+        168,
+        169,
+        170,
+        171,
+        172,
+        173,
+        174
+      ],
+      "best_tta_epoch": 138,
+      "n_changed_at_or_before_best_tta": 18,
+      "dose_reaches_delivered_selection": true,
+      "dose_reaches_plateau_window": true,
+      "n_plateau_epochs_under_dose": 8,
+      "n_plateau_epochs_total": 8,
+      "plateau_window_fully_inside_dose": true,
+      "lr_mult_at_best_tta": 1.0506,
+      "best_tta_argmax_epochs": [
+        138,
+        144,
+        150
+      ],
+      "best_tta_argmax_n": 3,
+      "best_tta_tie_break_rule": "first_wins",
+      "best_tta_last_tie_epoch": 150,
+      "selection_epoch_inside_dose": true,
+      "any_argmax_epoch_inside_dose": true,
+      "plateau_best_ever_pp": 97.4625,
+      "plateau_pass_line_reachable": false,
+      "phase1_bitwise_unchanged": true,
+      "phase2_start_unchanged": true,
+      "endpoint_inside_phase2_range": true,
+      "decay_amplitude_kept": 0.7778,
+      "decay_amplitude_kept_ok": true,
+      "plateau_window": 8,
+      "plateau_n": 8,
+      "plateau_first_epoch": 153,
+      "plateau_last_epoch": 174,
+      "plateau_mean": 97.4363,
+      "plateau_sd": 0.0812,
+      "selection_bias_pp": 0.0837,
+      "plateau_baseline_v47": 97.4625,
+      "plateau_sigma_used": 0.169,
+      "plateau_pass_line": 97.8,
+      "plateau_redline": 97.12,
+      "plateau_verdict": "NULL",
+      "plateau_advice_consistent": true,
+      "plateau_margin_at_least_2sigma": true,
+      "plateau_lines_derived_from_baseline": true,
+      "dose_delivered": true,
+      "dose_delivered_delivered_channel": true,
+      "lr_tail_delivered_verdict": "DOSE_DELIVERED"
+    },
+    "instrument": "INSTRUMENT_OK",
+    "why_this_axis": "v47 的 clamp 形态被实测判为『结构性不可观测』：剂量起点 ep168 晚于交付选择点 ep138 整整 30 轮。改用『余弦自己的终点』后，剂量从 ep121 起就在，完整覆盖交付选择窗（历史 best_tta 落在 ep138–162），且保留 78% 的衰减幅度。",
+    "paired_scope": "none: 改 lr 即改整条轨迹 ⇒ 单跑内不存在 control。本版只有跨跑判据 ⇒ 单跑 NULL 不得升级为‘轴无效’（需 3 seed）。"
+  },
+  "swa": {
+    "axis": "legacy read-only: late-window weight average (JUDGED DEAD in v46, kept for archive only)",
+    "enable": false,
+    "used_for_delivery": false,
+    "start_frac": 0.7,
+    "start_epoch": 126,
+    "end_epoch": -1,
+    "snapshot_every": 2,
+    "n_snapshots": 0,
+    "snapshot_epochs": [],
+    "delivery_source": "not_used_v51",
+    "swa_test": 0.0,
+    "swa_tta": 0.0,
+    "legacy_best_tta": 97.52,
+    "legacy_best_tta_epoch": 138,
+    "legacy_final_tta": 97.52,
+    "legacy_delivered": 97.52,
+    "swa_minus_legacy_pp": null,
+    "swa_verdict": "RETIRED_AXIS_READ_ONLY",
+    "paired_scope": "read-only archive; NOT part of any v47 criterion"
+  },
+  "history": {
+    "test": [
+      25.92,
+      36.15,
+      49.7,
+      58.43,
+      64.12,
+      70.04,
+      67.31,
+      72.17,
+      77.7,
+      80.01,
+      79.16,
+      83.62,
+      83.49,
+      83.13,
+      84.44,
+      85.43,
+      86.03,
+      86.31,
+      86.06,
+      84.88,
+      86.93,
+      88.07,
+      85.44,
+      88.28,
+      88.83,
+      86.07,
+      88.33,
+      89.1,
+      89.8,
+      88.53,
+      84.21,
+      89.04,
+      90.08,
+      89.07,
+      90.21,
+      88.43,
+      90.53,
+      90.08,
+      89.51,
+      87.98,
+      89.22,
+      87.51,
+      91.23,
+      90.3,
+      90.51,
+      90.78,
+      91.14,
+      91.15,
+      92.57,
+      92.45,
+      91.89,
+      91.17,
+      91.87,
+      90.0,
+      92.6,
+      91.8,
+      91.54,
+      92.32,
+      92.1,
+      92.35,
+      92.53,
+      92.25,
+      92.59,
+      93.46,
+      91.79,
+      94.07,
+      93.34,
+      93.14,
+      93.92,
+      94.15,
+      93.48,
+      92.72,
+      93.91,
+      94.04,
+      94.42,
+      94.65,
+      94.47,
+      94.54,
+      95.17,
+      95.08,
+      95.21,
+      95.2,
+      95.37,
+      95.5,
+      95.49,
+      95.65,
+      96.05,
+      96.0,
+      96.05,
+      95.63,
+      96.0,
+      96.21,
+      96.17,
+      96.26,
+      96.54,
+      96.71,
+      96.6,
+      96.58,
+      96.81,
+      96.71,
+      96.91,
+      96.98,
+      96.88,
+      97.03,
+      97.0,
+      97.09,
+      97.06,
+      97.08,
+      96.95,
+      97.17,
+      97.04,
+      97.31,
+      97.17,
+      97.33,
+      97.15,
+      97.27,
+      97.2,
+      97.24,
+      97.33,
+      97.21,
+      97.31,
+      97.37,
+      97.28,
+      97.3,
+      97.25,
+      97.37,
+      97.28,
+      97.29,
+      97.42,
+      97.31,
+      97.4,
+      97.35,
+      97.37,
+      97.37,
+      97.42,
+      97.42,
+      97.35,
+      97.33,
+      97.39,
+      97.22,
+      97.37,
+      97.32,
+      97.43,
+      97.37,
+      97.39,
+      97.37,
+      97.33,
+      97.39,
+      97.35,
+      97.36,
+      97.4,
+      97.39,
+      97.39,
+      97.24,
+      97.39,
+      97.4,
+      97.38,
+      97.4,
+      97.42,
+      97.37,
+      97.33,
+      97.4,
+      97.48,
+      97.23,
+      97.32,
+      97.36,
+      97.32,
+      97.37,
+      97.24,
+      97.28,
+      97.32,
+      97.39,
+      97.4,
+      97.31,
+      97.35
+    ],
+    "tta": [
+      {
+        "epoch": 81,
+        "acc": 95.6
+      },
+      {
+        "epoch": 84,
+        "acc": 95.79
+      },
+      {
+        "epoch": 87,
+        "acc": 96.29
+      },
+      {
+        "epoch": 90,
+        "acc": 96.26
+      },
+      {
+        "epoch": 93,
+        "acc": 96.46
+      },
+      {
+        "epoch": 96,
+        "acc": 96.73
+      },
+      {
+        "epoch": 99,
+        "acc": 96.99
+      },
+      {
+        "epoch": 102,
+        "acc": 97.0
+      },
+      {
+        "epoch": 105,
+        "acc": 97.26
+      },
+      {
+        "epoch": 108,
+        "acc": 97.29
+      },
+      {
+        "epoch": 111,
+        "acc": 97.43
+      },
+      {
+        "epoch": 114,
+        "acc": 97.3
+      },
+      {
+        "epoch": 117,
+        "acc": 97.38
+      },
+      {
+        "epoch": 120,
+        "acc": 97.48
+      },
+      {
+        "epoch": 123,
+        "acc": 97.5
+      },
+      {
+        "epoch": 126,
+        "acc": 97.41
+      },
+      {
+        "epoch": 129,
+        "acc": 97.4
+      },
+      {
+        "epoch": 132,
+        "acc": 97.41
+      },
+      {
+        "epoch": 135,
+        "acc": 97.49
+      },
+      {
+        "epoch": 138,
+        "acc": 97.52
+      },
+      {
+        "epoch": 141,
+        "acc": 97.41
+      },
+      {
+        "epoch": 144,
+        "acc": 97.52
+      },
+      {
+        "epoch": 147,
+        "acc": 97.49
+      },
+      {
+        "epoch": 150,
+        "acc": 97.52
+      },
+      {
+        "epoch": 153,
+        "acc": 97.27
+      },
+      {
+        "epoch": 156,
+        "acc": 97.51
+      },
+      {
+        "epoch": 159,
+        "acc": 97.4
+      },
+      {
+        "epoch": 162,
+        "acc": 97.51
+      },
+      {
+        "epoch": 165,
+        "acc": 97.47
+      },
+      {
+        "epoch": 168,
+        "acc": 97.39
+      },
+      {
+        "epoch": 171,
+        "acc": 97.49
+      },
+      {
+        "epoch": 174,
+        "acc": 97.45
+      }
+    ]
+  },
+  "mechanism": {
+    "required_keys": [
+      "sd_anneal_enable",
+      "sd_start",
+      "sd_end",
+      "sd_mean_at_119",
+      "sd_mean_at_120",
+      "sd_zero_from_120",
+      "sd_positive_at_119",
+      "dose_delivered",
+      "sd_trace_head",
+      "sd_trace_tail",
+      "sd_mean_at_last"
+    ],
+    "sd_anneal_enable": true,
+    "sd_start": 60,
+    "sd_end": 120,
+    "sd_mean_at_119": 0.000781,
+    "sd_mean_at_120": 0.0,
+    "sd_mean_at_179": null,
+    "skipped_keys": {
+      "sd_mean_at_179": "epoch 179 not reached (actual_epochs=175, last_epoch=174)"
+    },
+    "sd_mean_at_last": {
+      "epoch": 174,
+      "mean": 0.0
+    },
+    "sd_zero_from_120": {
+      "zero_from_120": true,
+      "n_violations": 0,
+      "first_violations": []
+    },
+    "sd_positive_at_119": true,
+    "dose_delivered": true,
+    "sd_trace_head": [
+      [
+        0,
+        0.0
+      ],
+      [
+        1,
+        0.000781
+      ],
+      [
+        2,
+        0.001563
+      ]
+    ],
+    "sd_trace_tail": [
+      [
+        172,
+        0.0
+      ],
+      [
+        173,
+        0.0
+      ],
+      [
+        174,
+        0.0
+      ]
+    ],
+    "missing_keys": [],
+    "errored_keys": [],
+    "required_keys_mode": "conditional(v45)",
+    "epochs_actually_run": 175,
+    "mechanism_ok": true,
+    "mechanism_ok_legacy": true
+  },
+  "sd_trace": [
+    [
+      0,
+      0.0
+    ],
+    [
+      1,
+      0.000781
+    ],
+    [
+      2,
+      0.001563
+    ],
+    [
+      3,
+      0.002344
+    ],
+    [
+      4,
+      0.003125
+    ],
+    [
+      5,
+      0.003906
+    ],
+    [
+      6,
+      0.004688
+    ],
+    [
+      7,
+      0.005469
+    ],
+    [
+      8,
+      0.00625
+    ],
+    [
+      9,
+      0.007031
+    ],
+    [
+      10,
+      0.007812
+    ],
+    [
+      11,
+      0.008594
+    ],
+    [
+      12,
+      0.009375
+    ],
+    [
+      13,
+      0.010156
+    ],
+    [
+      14,
+      0.010938
+    ],
+    [
+      15,
+      0.011719
+    ],
+    [
+      16,
+      0.0125
+    ],
+    [
+      17,
+      0.013281
+    ],
+    [
+      18,
+      0.014063
+    ],
+    [
+      19,
+      0.014844
+    ],
+    [
+      20,
+      0.015625
+    ],
+    [
+      21,
+      0.016406
+    ],
+    [
+      22,
+      0.017187
+    ],
+    [
+      23,
+      0.017969
+    ],
+    [
+      24,
+      0.01875
+    ],
+    [
+      25,
+      0.019531
+    ],
+    [
+      26,
+      0.020313
+    ],
+    [
+      27,
+      0.021094
+    ],
+    [
+      28,
+      0.021875
+    ],
+    [
+      29,
+      0.022656
+    ],
+    [
+      30,
+      0.023438
+    ],
+    [
+      31,
+      0.024219
+    ],
+    [
+      32,
+      0.025
+    ],
+    [
+      33,
+      0.025781
+    ],
+    [
+      34,
+      0.026562
+    ],
+    [
+      35,
+      0.027344
+    ],
+    [
+      36,
+      0.028125
+    ],
+    [
+      37,
+      0.028906
+    ],
+    [
+      38,
+      0.029687
+    ],
+    [
+      39,
+      0.030469
+    ],
+    [
+      40,
+      0.03125
+    ],
+    [
+      41,
+      0.032031
+    ],
+    [
+      42,
+      0.032812
+    ],
+    [
+      43,
+      0.033594
+    ],
+    [
+      44,
+      0.034375
+    ],
+    [
+      45,
+      0.035156
+    ],
+    [
+      46,
+      0.035938
+    ],
+    [
+      47,
+      0.036719
+    ],
+    [
+      48,
+      0.0375
+    ],
+    [
+      49,
+      0.038281
+    ],
+    [
+      50,
+      0.039062
+    ],
+    [
+      51,
+      0.039844
+    ],
+    [
+      52,
+      0.040625
+    ],
+    [
+      53,
+      0.041406
+    ],
+    [
+      54,
+      0.042188
+    ],
+    [
+      55,
+      0.042969
+    ],
+    [
+      56,
+      0.04375
+    ],
+    [
+      57,
+      0.044531
+    ],
+    [
+      58,
+      0.045312
+    ],
+    [
+      59,
+      0.046094
+    ],
+    [
+      60,
+      0.046875
+    ],
+    [
+      61,
+      0.046094
+    ],
+    [
+      62,
+      0.045312
+    ],
+    [
+      63,
+      0.044531
+    ],
+    [
+      64,
+      0.04375
+    ],
+    [
+      65,
+      0.042969
+    ],
+    [
+      66,
+      0.042188
+    ],
+    [
+      67,
+      0.041406
+    ],
+    [
+      68,
+      0.040625
+    ],
+    [
+      69,
+      0.039844
+    ],
+    [
+      70,
+      0.039062
+    ],
+    [
+      71,
+      0.038281
+    ],
+    [
+      72,
+      0.0375
+    ],
+    [
+      73,
+      0.036719
+    ],
+    [
+      74,
+      0.035938
+    ],
+    [
+      75,
+      0.035156
+    ],
+    [
+      76,
+      0.034375
+    ],
+    [
+      77,
+      0.033594
+    ],
+    [
+      78,
+      0.032812
+    ],
+    [
+      79,
+      0.032031
+    ],
+    [
+      80,
+      0.03125
+    ],
+    [
+      81,
+      0.030469
+    ],
+    [
+      82,
+      0.029687
+    ],
+    [
+      83,
+      0.028906
+    ],
+    [
+      84,
+      0.028125
+    ],
+    [
+      85,
+      0.027344
+    ],
+    [
+      86,
+      0.026562
+    ],
+    [
+      87,
+      0.025781
+    ],
+    [
+      88,
+      0.025
+    ],
+    [
+      89,
+      0.024219
+    ],
+    [
+      90,
+      0.023438
+    ],
+    [
+      91,
+      0.022656
+    ],
+    [
+      92,
+      0.021875
+    ],
+    [
+      93,
+      0.021094
+    ],
+    [
+      94,
+      0.020313
+    ],
+    [
+      95,
+      0.019531
+    ],
+    [
+      96,
+      0.01875
+    ],
+    [
+      97,
+      0.017969
+    ],
+    [
+      98,
+      0.017188
+    ],
+    [
+      99,
+      0.016406
+    ],
+    [
+      100,
+      0.015625
+    ],
+    [
+      101,
+      0.014844
+    ],
+    [
+      102,
+      0.014063
+    ],
+    [
+      103,
+      0.013281
+    ],
+    [
+      104,
+      0.0125
+    ],
+    [
+      105,
+      0.011719
+    ],
+    [
+      106,
+      0.010937
+    ],
+    [
+      107,
+      0.010156
+    ],
+    [
+      108,
+      0.009375
+    ],
+    [
+      109,
+      0.008594
+    ],
+    [
+      110,
+      0.007812
+    ],
+    [
+      111,
+      0.007031
+    ],
+    [
+      112,
+      0.00625
+    ],
+    [
+      113,
+      0.005469
+    ],
+    [
+      114,
+      0.004687
+    ],
+    [
+      115,
+      0.003906
+    ],
+    [
+      116,
+      0.003125
+    ],
+    [
+      117,
+      0.002344
+    ],
+    [
+      118,
+      0.001562
+    ],
+    [
+      119,
+      0.000781
+    ],
+    [
+      120,
+      0.0
+    ],
+    [
+      121,
+      0.0
+    ],
+    [
+      122,
+      0.0
+    ],
+    [
+      123,
+      0.0
+    ],
+    [
+      124,
+      0.0
+    ],
+    [
+      125,
+      0.0
+    ],
+    [
+      126,
+      0.0
+    ],
+    [
+      127,
+      0.0
+    ],
+    [
+      128,
+      0.0
+    ],
+    [
+      129,
+      0.0
+    ],
+    [
+      130,
+      0.0
+    ],
+    [
+      131,
+      0.0
+    ],
+    [
+      132,
+      0.0
+    ],
+    [
+      133,
+      0.0
+    ],
+    [
+      134,
+      0.0
+    ],
+    [
+      135,
+      0.0
+    ],
+    [
+      136,
+      0.0
+    ],
+    [
+      137,
+      0.0
+    ],
+    [
+      138,
+      0.0
+    ],
+    [
+      139,
+      0.0
+    ],
+    [
+      140,
+      0.0
+    ],
+    [
+      141,
+      0.0
+    ],
+    [
+      142,
+      0.0
+    ],
+    [
+      143,
+      0.0
+    ],
+    [
+      144,
+      0.0
+    ],
+    [
+      145,
+      0.0
+    ],
+    [
+      146,
+      0.0
+    ],
+    [
+      147,
+      0.0
+    ],
+    [
+      148,
+      0.0
+    ],
+    [
+      149,
+      0.0
+    ],
+    [
+      150,
+      0.0
+    ],
+    [
+      151,
+      0.0
+    ],
+    [
+      152,
+      0.0
+    ],
+    [
+      153,
+      0.0
+    ],
+    [
+      154,
+      0.0
+    ],
+    [
+      155,
+      0.0
+    ],
+    [
+      156,
+      0.0
+    ],
+    [
+      157,
+      0.0
+    ],
+    [
+      158,
+      0.0
+    ],
+    [
+      159,
+      0.0
+    ],
+    [
+      160,
+      0.0
+    ],
+    [
+      161,
+      0.0
+    ],
+    [
+      162,
+      0.0
+    ],
+    [
+      163,
+      0.0
+    ],
+    [
+      164,
+      0.0
+    ],
+    [
+      165,
+      0.0
+    ],
+    [
+      166,
+      0.0
+    ],
+    [
+      167,
+      0.0
+    ],
+    [
+      168,
+      0.0
+    ],
+    [
+      169,
+      0.0
+    ],
+    [
+      170,
+      0.0
+    ],
+    [
+      171,
+      0.0
+    ],
+    [
+      172,
+      0.0
+    ],
+    [
+      173,
+      0.0
+    ],
+    [
+      174,
+      0.0
+    ]
+  ],
+  "instrument": {
+    "purpose": "[v103] seed swap is the only axis (SEED 1234->42); this instrument block stays read-only",
+    "epochs_config": 180,
+    "actual_epochs": 175,
+    "last_epoch": 174,
+    "early_stopped": true,
+    "stop_reason": "TTA no improvement for 12 evaluations",
+    "history_len_matches": true,
+    "epoch_field_is_config": true,
+    "epoch_field_note": "results['epoch'] == TRAIN_EPOCHS (config constant), NOT epochs actually run",
+    "final_tta_measures": "best_tta_ckpt",
+    "final_tta_source_epoch": 138,
+    "final_tta_is_last_epoch": false,
+    "final_tta_note": "final_tta re-measures the best_tta checkpoint, NOT the last-epoch weights; it inherits max-of-N selection bias",
+    "mechanism_ok": true,
+    "mechanism_ok_legacy": true,
+    "errored_keys": [],
+    "skipped_keys": {
+      "sd_mean_at_179": "epoch 179 not reached (actual_epochs=175, last_epoch=174)"
+    },
+    "checks": {
+      "actual_epochs_positive": true,
+      "history_len_matches": true,
+      "early_stop_fields_written": true,
+      "mechanism_ok_strict": true,
+      "no_errored_keys": true,
+      "skipped_keys_declared": true,
+      "final_tta_measure_declared": true
+    },
+    "verdict": "INSTRUMENT_OK",
+    "same_seed_replicate_of_v44": {
+      "seed": 42,
+      "v44_seed": 1234,
+      "same_seed": false,
+      "verdict": "SEED_CHANGED_NOT_A_REPLICATE",
+      "final_tta": 97.52,
+      "v44_final_tta": 97.52,
+      "delta_tta_pp": 0.0,
+      "actual_epochs": 175,
+      "v44_actual_epochs": 157,
+      "actual_epochs_match": false,
+      "fp_test_matches_v44": false,
+      "fp_tta_matches_v44": false,
+      "v44_fp_test": "ae29234502dcafa684f6bd622a7dc7495a108db1",
+      "v44_fp_tta": "f421be4748abdf7ae8e69753210e37bc7df97f9f"
+    }
+  },
+  "replicate": {
+    "purpose": "[v103] z-combination with v43 (kept for continuity); v103 shares seed 42 with v43 => NOT combinable as independent",
+    "note": "[v103] v43 was seed 42 and this run is seed 42 => same seed, different code (v43 predates the whole v45-v102 stack) => the two z-scores must NOT be merged (pitfall 106). Against v44 (seed 1234) this run IS a different seed, but v44 also differs by the entire v45-v102 code stack, so it is neither a same-code pair (that is v103 vs v102, see v103_seed_pair) nor a same-seed replicate.",
+    "code_differs_from_v44_by": [
+      "the entire v45-v102 stack",
+      "SEED 1234 -> 42"
+    ],
+    "hist_final_tta_mean": 97.237,
+    "hist_final_tta_sd": 0.092,
+    "v43_seed": 42,
+    "v43_final_tta": 97.41,
+    "z_v43": 1.8804,
+    "final_tta": 97.52,
+    "z_run": 3.0761,
+    "z_combined": 3.5048,
+    "replicate_verdict": "NOT_AN_INDEPENDENT_OBSERVATION",
+    "independent_observation": false,
+    "independent_of_v44": true,
+    "seed_differs_from_v43": false,
+    "curves_differ_from_v43": true,
+    "fp_test": "63a2bbc58466bb31f5609bfe0c30443475489692",
+    "fp_tta": "91b93b9cbe33f0f7764fcbed955380a245f7c744",
+    "v43_fp_test": "58746632913adbd84d09e77d06fde3b0148439da",
+    "v43_fp_tta": "a7c582f11ecd7fc4d1cbc6c3445b510bea345bbc",
+    "backtrack_advice": "DO_NOT_BACKTRACK_CODE",
+    "backtrack_reason": "[v103] code differs from cnn10_v102.py ONLY by the SEED line (1234->42); a low reading is seed variance, the action is another seed, not a code rollback",
+    "scope_note": "本字段属于【复跑判据】块（当前口径：代码只差 SEED ⇒ 低读数是 seed 方差，动作是换 seed 而不是回退代码）。★ 与本版【交付判据】的红线（delivered <= 97.04 ⇒ 回退 cnn10_v46.py）是两个不同作用域，不要混读：前者管'代码要不要退'，后者管'交付权重链要不要退'。"
+  },
+  "v103_seed_pair": {
+    "purpose": "first same-code cross-seed pair on the CURRENT code stack (v103 seed 42 vs v102 seed 1234); measures the seed spread the 3-seed protocol needs; claims no accuracy conclusion",
+    "this_version": "v110",
+    "this_seed": 42,
+    "this_delivered": 97.52,
+    "this_final_tta": 97.52,
+    "this_plateau_mean": 97.4363,
+    "pair_version": "v102",
+    "pair_seed": 1234,
+    "pair_delivered": 97.42,
+    "pair_final_tta": 97.42,
+    "pair_plateau_mean": 97.3088,
+    "delta_delivered_pp": 0.1,
+    "abs_delta_within_sigma_diff": true,
+    "sigma_diff_pp": 0.169,
+    "pair_provenance_note": "v102 实跑 provenance 破损：文件名 loss.mmm1.py、self_sha1=ad09773175920ecde37cb82d88777d13eec3f1b4 != 交付片 c12256abdedbd37c13e677b2ae995deaea697e25；读数待训练机核对实跑文件与交付片的 diff 之后采信",
+    "verdict": "SEED_SPREAD_WITHIN_SIGMA",
+    "note": "|delta| <= sigma_diff=0.169pp ⇒ 两个 seed 的差落在噪声底内，seed 方差量到了；超出 ⇒ 要么 seed 方差比四对 RMS 估的宽，要么 v102 读数有 provenance 问题，两种情况都要读，都不是自动的回退信号。"
+  },
+  "v96_dft_grid": {
+    "axis": "v96 axis = DFT FREQUENCY-GRID CORRECTION on the physics field. The production grid was torch.linspace(-pi, pi, N) whose step is 2*pi/(N-1) (closed interval; -pi and +pi are the same bin listed twice), while the true fftshift-ed DFT bin spacing is 2*pi/N (half-open) with DC at index N//2. Replaced by _dft_axis(N) = arange(N)*2*pi/N - pi, which matches 2*pi*fftfreq. This is a v51 INHERITED BUG (pitfall 273/253), not a new mechanism: it restores FLIP EQUIVARIANCE -- which flip-TTA, i.e. the delivery metric, depends on exclusively -- and makes the DC gain exactly 1. torch.linspace has NO endpoint kwarg (numpy API, pitfall 275) so arange is used. All the rest is verbatim cnn10_v51.py; groups stays 8. Recipe-domain change: step 0 already differs from v51, so this is a cross-run criterion only.",
+    "selftest": {
+      "ran": true,
+      "error": null,
+      "n_pass": 8,
+      "n_total": 8,
+      "checks": {
+        "case0_matches_dft_frequencies": {
+          "pass": true,
+          "msg": "N8:2.38e-07 N16:2.38e-07 N32:2.38e-07"
+        },
+        "case1_dc_bin_is_zero": {
+          "pass": true,
+          "msg": "N8 new=0.000e+00 old=4.488e-01 N16 new=0.000e+00 old=2.094e-01 N32 new=0.000e+00 old=1.013e-01"
+        },
+        "case2_flip_equivariant": {
+          "pass": true,
+          "msg": "max|diff|=1.490e-07 (阈 1e-05)"
+        },
+        "case3_transpose_equivariant": {
+          "pass": true,
+          "msg": "max|diff|=1.043e-07 (阈 1e-05)"
+        },
+        "case4_dc_gain_is_one": {
+          "pass": true,
+          "msg": "max|dev from 1|=0.000e+00 (阈 1e-04)"
+        },
+        "NEGCTRL_case5_old_grid_breaks_flip": {
+          "pass": true,
+          "msg": "旧网格 max|diff|=3.190e-02 (须 >= 1e-03)"
+        },
+        "NEGCTRL_case6_old_grid_breaks_dc": {
+          "pass": true,
+          "msg": "旧网格 max|dev from 1|=9.582e-02 (须 >= 1e-03)"
+        },
+        "case7_no_rng_consumed": {
+          "pass": true,
+          "msg": "arange / 独立 generator ⇒ 全局 RNG 不变 ⇒ 跨跑序列与 v51 共享"
+        }
+      },
+      "all_pass": true,
+      "completed": true,
+      "n_expected": 8,
+      "kernel_max_abs_diff": 0.2033558487892151,
+      "grid_step_new": 0.39269908169872414,
+      "grid_step_old": 0.41887902047863906,
+      "flip_diff_new": 1.4901161193847656e-07,
+      "flip_diff_old": 0.03190094232559204,
+      "dc_dev_new": 0.0,
+      "dc_dev_old": 0.09581786394119263
+    },
+    "verdict": "DFT_DELIVERED",
+    "self_sha1": "77d894fbb6be9e92e41c021dbf698dc3f8e12cc8",
+    "criterion": {
+      "baseline_v51_acc": 97.56,
+      "sigma_diff_pp": 0.169,
+      "pass_line": 97.9,
+      "redline": 97.22,
+      "margin_in_sigma": 2.0,
+      "margin_2sigma_ok": true,
+      "note": "PASS 边距 = 2σ_diff。依据 v48 noise_floor/note：v47/v48 的边距0.10pp 只有 0.93σ ⇒ 那两个 NULL 是算术上被预先决定的。recipe 域改动 ⇒ 只有跨跑判据，单跑 NULL 不得升级为『轴无效』。"
+    },
+    "rolled_back_to": "cnn10_v51.py (逐字; v95 delivered 97.33 = -0.23pp = -2.13σ, NULL 偏负 ⇒ 不触红线但不带进下一版)",
+    "prev_version": "v109",
+    "prev_sha1": "b22097bb6773f0b2da30889e590fe9ba893893a2"
+  },
+  "v96_file_name_selfcheck": {
+    "file_name": "loss.mmm1.py",
+    "version": "v112",
+    "ok": false,
+    "error": null
+  },
+  "self_sha1": "77d894fbb6be9e92e41c021dbf698dc3f8e12cc8",
+  "disk_guard": {
+    "writes_ok": 90,
+    "writes_skipped": 0,
+    "writes_failed": 0,
+    "remove_failed": 0,
+    "min_free_gb_seen": 19.088,
+    "verdict": "DISK_ALL_WRITES_OK",
+    "events": [],
+    "note": "[v97 继承，v98 原样保留] v97 axis = DISK WRITE GUARD (3 lines), training recipe verbatim v96. Line 1 (the real one) = pre-write free-space check via os.statvfs; line 2 = atomic write via .tmp + os.replace; line 3 = python-level exception fallback + counters into this JSON. NOTE HONESTLY: try/except CANNOT catch the C++ abort that follows a partially-written torch.save (c10::Error from PyTorchStreamWriter destructor) - only line 1 prevents that by never calling torch.save when space is short. Because this run has NO resume (user decision), a core dump from any other cause still loses everything; these guards only remove the disk from the list of things that can cause one."
+  },
+  "v100_instrument_fix": {
+    "axis_this_version": "v100 axis = INSTRUMENT / CRITERION CORRECTION ONLY - ZERO training-math change. No parameter, no schedule, no RNG draw, no loss term, no physics constant differs from v99; train()/test_tta() and the whole physics chain are bit-identical. What changes is the RULER, and the ruler was provably wrong in five places. (1) sigma_diff was 0.108pp estimated from a SINGLE pair (v45/v46) while the archive holds FOUR same-recipe pairs - |delta delivered| = 0.120 (v45/v46), 0.040 (v48/v49), 0.140 (v44/v54), 0.280 (v51/v55) - whose RMS is 0.169pp, i.e. the old constant UNDERSTATED the noise floor by 1.565x and made every old line too loose. sigma_diff := 0.169. (2) All derived lines are now computed from constants (PLATEAU_PASS/REDLINE, PASS_LINE_96/REDLINE_96, BACKTRACK_REDLINE) instead of hardcoded literals - v99 still had 97.27 and 97.61 as raw literals, and 97.27 was derived from a sigma of 0.06 that is not the same ruler as PLATEAU_SIGMA. (3) The lr_tail dose gate is split in two: v99 used ONE gate (`dose_delivered`) for two different channels, and v99's own data shows why that is wrong - the dose DID run for 36 epochs (ep121-156) and the plateau window (ep135-156) lies FULLY inside it, but the delivery selection landed on ep120 because TTA ties at ep120 and ep126 (both 97.44) and the rule is first-wins. So the delivery-channel blindness is an artifact of the tie-break rule, not a missing dose. (4) The argmax tie is now a machine field (best_tta_argmax_epochs / _n / tie_break_rule). (5) The delivery claim that v99's own data falsified (`expected_delivered_vs_v98: identical 97.42`, actually 97.44) is corrected in place, with the original text preserved under a *_AS_WRITTEN_AT_DELIVERY key. HONESTY NOTE: with sigma_diff = 0.169 the plateau PASS line becomes 97.80, which is ABOVE the best plateau this line has ever produced (97.4625, v48) - so a single-run plateau verdict is arithmetically pre-decided to NULL. That is the mirror image of the v47/v48 error (line too low); the deliverable of this version is the corrected ruler, not an accuracy claim. Recipe-domain change: NO. Cross-run criterion only; single-run NULL must NOT be upgraded to 'axis invalid' (needs 3 seeds).",
+    "parent_version": "v99",
+    "parent_sha1": "d11403c2e7c94b796db202e016be4e9a1ff36d56",
+    "training_math_changed": false,
+    "training_math_evidence": [
+      "no parameter / schedule / RNG draw / loss term / physics constant differs from v99",
+      "SEED / BATCH_SIZE / LR_BASE / PHASE2_LR_END / PINN_WEIGHT / GATE1_INJECT all verbatim",
+      "function-level md5 vs v99: DIFF confined to criterion + instrument functions"
+    ],
+    "corrections": {
+      "1_sigma_diff_0.108_to_0.169": {
+        "old_pp": 0.108,
+        "new_pp": 0.169,
+        "old_source": "v45/v46 ONE pair (|delta delivered| = 0.120pp)",
+        "new_source": "FOUR same-recipe pairs, |delta delivered| RMS",
+        "pairs_pp": {
+          "v45_v46": 0.12,
+          "v48_v49": 0.04,
+          "v44_v54": 0.14,
+          "v51_v55": 0.28
+        },
+        "rms_pp": 0.169,
+        "old_over_new_ratio": 0.639,
+        "understatement_factor": 1.565,
+        "lesson": "a single pair measures that pair's LUCK, not the variance (pitfall 113 in its measurement form)"
+      },
+      "2_all_lines_derived_from_constants": {
+        "plateau_pass": 97.8,
+        "plateau_redline": 97.12,
+        "v51_pass_line": 97.9,
+        "v51_redline": 97.22,
+        "backtrack_redline": 97.04,
+        "was_hardcoded_in_v99": [
+          "BACKTRACK_REDLINE = 97.27",
+          "if delivered >= 97.61:"
+        ],
+        "now": "round(baseline -/+ 2*sigma, 2) everywhere; guards are EXACT equalities"
+      },
+      "3_dose_gate_split_in_two": {
+        "old": "one field `dose_delivered` gated both the plateau channel and the delivered-selection channel",
+        "v99_measurement": {
+          "n_changed_full_horizon": 80,
+          "n_changed_in_this_run": 36,
+          "dose_window_epochs": [
+            121,
+            156
+          ],
+          "plateau_window_epochs": [
+            135,
+            156
+          ],
+          "plateau_fully_inside_dose": true,
+          "best_tta_epoch": 120,
+          "argmax_tie_epochs": [
+            120,
+            126
+          ],
+          "tie_break_rule": "first_wins"
+        },
+        "new_fields": [
+          "dose_delivered (plateau channel, HARD guard)",
+          "dose_delivered_delivered_channel (fact)",
+          "dose_reaches_delivered_selection (fact)",
+          "dose_reaches_plateau_window (fact)",
+          "lr_tail_delivered_verdict (4-way)"
+        ],
+        "why": "the delivery-channel blindness is an artifact of the first-wins tie-break, NOT a missing dose; one gate falsified a fact that was true"
+      },
+      "4_argmax_tie_is_now_a_machine_field": {
+        "fields": [
+          "best_tta_argmax_epochs",
+          "best_tta_argmax_n",
+          "best_tta_tie_break_rule",
+          "best_tta_last_tie_epoch",
+          "selection_epoch_inside_dose",
+          "any_argmax_epoch_inside_dose"
+        ],
+        "why": "in v99 the tie (ep120 == ep126 == 97.44) was only visible by reading the curve by eye; it is the entire explanation of the dose verdict"
+      },
+      "5_falsified_expectation_corrected": {
+        "where": "results['v99_crash_fix']['expected_delivered_vs_v98']",
+        "as_written": "identical (97.42)",
+        "actually_ran": 97.44,
+        "fix": "original text kept verbatim under a *_AS_WRITTEN_AT_DELIVERY key plus a *_CORRECTED_BY_V100 key (history is annotated, never erased - pitfall 292)"
+      }
+    },
+    "sigma_block": {
+      "sigma_diff_pp": 0.169,
+      "margin_2sigma_pp": 0.338,
+      "pass_margin_ok": true,
+      "lines_derived_ok": true,
+      "source": "v48 实跑 97.4625（末 8 次 TTA 均值）；σ_diff 来源 = 归档定案的**四对**同口径跑 |Δdelivered| 的 RMS：v45/v46=0.120、v48/v49=0.040、v44/v54=0.140、v51/v55=0.280 ⇒ RMS = 0.169pp。★ 该 σ 是**实测**，不是 n=3 估计，也不是一对的运气。"
+    },
+    "dose_split_block": {
+      "plateau_gate_dose_delivered": true,
+      "n_plateau_epochs_under_dose": 8,
+      "n_plateau_epochs_total": 8,
+      "delivered_channel_dose_delivered": true,
+      "lr_tail_delivered_verdict": "DOSE_DELIVERED",
+      "argmax_epochs": [
+        138,
+        144,
+        150
+      ]
+    },
+    "reachability_note": "★ σ 0.108 → 0.169 后，平台 PASS 线 = 97.80，而本线历史最好平台 = 97.4625 ⇒ plateau_pass_line_reachable = False。单跑平台判词在算术上预先决定为 NULL；这不是轴无效的证据，是尺子变准后的必然结果（v47/v48 之错的镜像：那次线太低）。本版的交付物是仪器修正本身，精度主张留到尺子稳定之后（且仍需 3 seed）。",
+    "expected_delivered_vs_v99": "STATISTICALLY INDISTINGUISHABLE, NOT 'IDENTICAL'. v100's training math is bit-identical to v99 (no parameter/schedule/RNG/loss/constant change), so any difference is run-to-run noise on the same code path. But this platform has same-seed non-determinism measured three times (pitfall 141) plus cudnn/cuBLAS non-associativity, and v99 itself proved the point: it claimed 'identical (97.42)' and ran 97.44. => this field does NOT promise a number. Expected magnitude: |delta| within sigma_diff = 0.169pp of v99's 97.44; a larger deviation is a measurement worth reading, not automatically a regression.",
+    "self_sha1": "77d894fbb6be9e92e41c021dbf698dc3f8e12cc8"
+  }
+}

@@ -1,0 +1,4 @@
+﻿Venv python exists: True
+timm check: timm 1.0.28 OK
+aa1.py exists: False
+train_vit exists: True

@@ -1,0 +1,45 @@
+# ---- Python ----
+__pycache__/
+*.py[cod]
+*.so
+.Python
+build/
+dist/
+*.egg-info/
+.venv/
+venv/
+env/
+
+# ---- Training artefacts (never commit weights / checkpoints) ----
+ckpts_*/
+out_*/
+runs/
+*.pth
+*.pt
+*.ckpt
+*.tar
+*.npz
+best_*.pth
+last_*.pth
+swa_*.pth
+
+# ---- Datasets ----
+data/
+datasets/
+cifar-10-batches-py/
+cifar-100-python/
+*.tar.gz
+
+# ---- Logs / editors ----
+*.log
+wandb/
+.idea/
+.vscode/
+*.swp
+.DS_Store
+Thumbs.db
+
+# ---- Local scratch ----
+_archive_*/
+tmp/
+temp/

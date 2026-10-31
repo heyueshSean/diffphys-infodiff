@@ -1,0 +1,22 @@
+# 换行约定是各线的历史契约，不要"顺手统一"：
+#   - nn/cifar10/*.py, nn/cifar10_infodiff/*.py  -> LF
+#   - nn/cifar100/*.py                            -> CRLF
+#   - rl/**.py                                    -> LF
+#   - tools/**：部分文件是 CRLF（与生成它的环境一致）
+#
+# 因此对**代码与证据**一律用 `-text`：Git 不做任何换行转换，字节原样进出。
+# 这是 provenance 的硬要求 —— MANIFEST.md 里的 sha1 必须等于训练机上的 sha1；
+# 只要 Git 动过一个 \r，那条对应关系就断了。
+#
+# 只有文档类（md / json / txt / yml）才做 LF 归一化。
+
+rl/**                    -text
+nn/**                    -text
+results/**               -text
+tools/**                 -text
+MANIFEST.md              -text
+
+*.md    text eol=lf
+*.json  text eol=lf
+*.txt   text eol=lf
+*.yml   text eol=lf
