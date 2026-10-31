@@ -1,6 +1,15 @@
 # 发布到 GitHub
 
-本地仓库**已提交完毕**。剩下只有一步：建远端并推送。
+## 🎉 已上线
+
+**https://github.com/heyueshSean/diffphys-infodiff**
+
+73 个文件 / 6.8 MB，推送时间 2026-10-31T04:28:10Z，默认分支 `main`。
+走的是 **SSH**（`github.com:443` 在这台机器被网络策略挡死，443 走不通、22 通）。
+
+推送后又从 GitHub **克隆回来逐字节比对过**：**73/73 文件 sha1 完全一致**，
+包括 CRLF 的 CRLF（`CR=230`、`CR=12240` 一个 `\r` 没丢）。
+⇒ 仓库里的 `MANIFEST.md` 指纹在远端同样成立。
 
 ## 0. 本地状态（已完成）
 
@@ -43,7 +52,17 @@
 > 代理只对 `api.github.com` 等少数 host 放行。⇒ **`git push` 默认走的
 > `https://github.com` 是死路**，必须改用下面两种方式之一。
 
-### 方式 0（推荐）：SSH —— 已配好，只差把公钥加到 GitHub
+### ✅ 方式 0（实际采用）：SSH
+
+443 被拦、22 通。把公钥加到 GitHub 后，`git push -u origin main` 一次成功。
+
+```bash
+git remote add origin git@github.com:<owner>/diffphys-infodiff.git
+git branch -M main
+git push -u origin main
+```
+
+### 方式 0b：SSH（如尚未加公钥）—— 已配好，只差把公钥加到 GitHub
 
 本地已就绪：`origin` 指向 `git@github.com:heyueshSean/diffphys-infodiff.git`，
 分支已改名 `main`，3 个 commit 待推。
@@ -160,6 +179,52 @@ git ls-files | while read f; do
   [ "$a" = "$b" ] || echo "MISMATCH: $f"
 done
 ```
+
+## 3b. ★★ 第二个坑：本地一致 ≠ 克隆一致
+
+第一个坑靠提交后的字节校验抓到。但**只校验本地是不够的**——推上去之后
+我用**默认配置**（`-c core.autocrlf=true`，即 Git for Windows 的出厂设置）
+重新克隆了一份，逐字节比对，结果：
+
+```
+缺失 = 0   多余 = 0   字节不同 = 3
+   !! .gitattributes
+   !! .gitignore
+   !! LICENSE
+```
+
+**根因**：`core.autocrlf` 是**本地**配置，**不会随仓库传播**。那三个根文件
+既不在 `-text` 目录里，也不匹配任何扩展名规则 ⇒ 落进了克隆者 `autocrlf=true`
+的手里，被转成 CRLF。讽刺的是，其中一个是 `.gitattributes` 自己。
+
+**修法**：加一条兜底，且必须是**最后一行**（后出现的规则赢）：
+
+```gitattributes
+# ---- 1. 文档类先写 ----
+*.md    text eol=lf
+*.txt   text eol=lf
+
+# ---- 2. 目录级后写，覆盖上面 ----
+rl/**       -text
+results/**  -text
+
+# ---- 3. 兜底放最后 ----
+*           -text
+```
+
+修完再克隆：**73/73 字节全部一致**。
+
+**工具**：`tools/verify_clone_bytes.py` —— 从外部验证这件事：
+
+```bash
+git clone --depth 1 -c core.autocrlf=true \
+    git@github.com:heyueshSean/diffphys-infodiff.git /tmp/clone_check
+python tools/verify_clone_bytes.py --clone /tmp/clone_check
+```
+
+★ 教训：**仓库级的 `core.autocrlf=false` 只保护你自己**。
+要让别人拿到同样的字节，必须靠 `.gitattributes`，而且必须**覆盖到每一个文件**
+——漏掉的那几个，正是你以为"不重要"的根文件。
 
 ## 4. 未入库的内容（有意排除）
 
